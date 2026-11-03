@@ -1,0 +1,58 @@
+<div class="loadstone" data-loadstone>
+  <div class="dial" aria-hidden="true">
+    <svg viewBox="0 0 100 100" class="arrow" data-arrow>
+      <path d="M50 12 L66 70 L50 60 L34 70 Z" fill="#2f8f6b" />
+    </svg>
+  </div>
+  <p class="readout" aria-live="off"><span data-distance>Move your cursor around.</span> <span class="plain" data-explain>The arrow points at it, the way Loadstone points at a saved spot.</span></p>
+</div>
+
+<script>
+  import { arrowAngle } from '../../../lib/cards/loadstone';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-loadstone]')) {
+    const arrow = root.querySelector<SVGElement>('[data-arrow]')!;
+    const dial = root.querySelector<HTMLElement>('.dial')!;
+    const out = root.querySelector<HTMLElement>('[data-distance]')!;
+    const touch = matchMedia('(pointer: coarse)').matches;
+    const thing = touch ? 'finger' : 'cursor';
+    if (touch) {
+      out.textContent = 'Touch anywhere on the page.';
+      root.querySelector<HTMLElement>('[data-explain]')!.textContent = 'The arrow points at your finger, the way Loadstone points at a saved spot.';
+    }
+    let frame = 0;
+    let last = { x: 0, y: 0 };
+    const update = () => {
+      frame = 0;
+      const r = dial.getBoundingClientRect();
+      if (!r.width) return;
+      const c = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      arrow.style.transform = `rotate(${arrowAngle(c, last)}deg)`;
+      const scale = r.width / 96;
+      const cm = Math.hypot(last.x - c.x, last.y - c.y) / scale / 24;
+      out.textContent = cm < 2 ? "You're here." : `Your ${thing} is ${Math.round(cm)} cm away on the desk.`;
+    };
+    window.addEventListener('pointermove', (e) => {
+      last = { x: e.clientX, y: e.clientY };
+      if (!frame) frame = requestAnimationFrame(update);
+    }, { passive: true });
+    window.addEventListener('touchstart', (e) => {
+      const t0 = e.touches[0];
+      last = { x: t0.clientX, y: t0.clientY };
+      if (!frame) frame = requestAnimationFrame(update);
+    }, { passive: true });
+  }
+</script>
+
+<style>
+  .loadstone { display: flex; gap: 0.9rem; align-items: center; margin: 0 0 0.8rem; }
+  .dial {
+    flex: none; width: 96px; height: 96px; border-radius: 50%;
+    background: radial-gradient(circle, #fff 55%, #eef5f1 56%);
+    border: 2px solid #cfe2d8; display: grid; place-items: center;
+  }
+  .arrow { width: 80px; height: 80px; transition: transform 120ms linear; }
+  .readout { margin: 0; font-size: 0.85rem; line-height: 1.4; color: var(--muted); }
+  .readout span { display: block; color: var(--ink); font-weight: 600; }
+  .readout .plain { color: var(--muted); font-weight: 400; }
+</style>

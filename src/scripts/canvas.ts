@@ -200,22 +200,15 @@ function enable(root: HTMLElement): () => void {
     e.preventDefault();
   }
 
-  // Bring a card into view when it gets keyboard focus
-  function onFocusIn(e: FocusEvent) {
-    const card = (e.target as Element).closest<HTMLElement>('[data-card]');
-    if (!card) return;
-    const r = viewport.getBoundingClientRect();
-    const c = card.getBoundingClientRect();
-    const margin = 60;
-    let dx = 0;
-    let dy = 0;
-    if (c.left < r.left + margin) dx = r.left + margin - c.left;
-    else if (c.right > r.right - margin) dx = r.right - margin - c.right;
-    if (c.top < r.top + margin) dy = r.top + margin - c.top;
-    else if (c.bottom > r.bottom - margin) dy = r.bottom - margin - c.bottom;
-    if (dx || dy) set(pan(view, dx, dy), true);
-    viewport.scrollTop = 0;
+  // Tabbing to an off-screen card makes the browser scroll the clipped viewport.
+  // Turn that scroll into a pan so the transform stays the single source of truth.
+  function onScroll() {
+    const dx = viewport.scrollLeft;
+    const dy = viewport.scrollTop;
+    if (!dx && !dy) return;
     viewport.scrollLeft = 0;
+    viewport.scrollTop = 0;
+    set(pan(view, -dx - Math.sign(dx) * 60, -dy - Math.sign(dy) * 60), true);
   }
 
   const zoomButtons = [...tools.querySelectorAll<HTMLButtonElement>('[data-zoom]')];
@@ -230,7 +223,7 @@ function enable(root: HTMLElement): () => void {
   viewport.addEventListener('pointercancel', onUp);
   viewport.addEventListener('wheel', onWheel, { passive: false });
   viewport.addEventListener('keydown', onKey);
-  viewport.addEventListener('focusin', onFocusIn);
+  viewport.addEventListener('scroll', onScroll);
   zoomButtons.forEach((b) => b.addEventListener('click', onZoomButton));
   tidy.addEventListener('click', onTidy);
   window.addEventListener('resize', onResize);
@@ -249,7 +242,7 @@ function enable(root: HTMLElement): () => void {
     viewport.removeEventListener('pointercancel', onUp);
     viewport.removeEventListener('wheel', onWheel);
     viewport.removeEventListener('keydown', onKey);
-    viewport.removeEventListener('focusin', onFocusIn);
+    viewport.removeEventListener('scroll', onScroll);
     zoomButtons.forEach((b) => b.removeEventListener('click', onZoomButton));
     tidy.removeEventListener('click', onTidy);
     window.removeEventListener('resize', onResize);

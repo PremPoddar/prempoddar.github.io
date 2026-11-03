@@ -5,6 +5,10 @@ import Card from './Card.astro';
 import StickyNote from './StickyNote.astro';
 import Zone from './Zone.astro';
 import Platforms from '../Platforms.astro';
+import LoadstoneCard from './cards/LoadstoneCard.astro';
+import CaffeinateCard from './cards/CaffeinateCard.astro';
+import BrewlightCard from './cards/BrewlightCard.astro';
+import DuetCard from './cards/DuetCard.astro';
 import { zones, items, notes, links, startBounds } from '../../data/canvas';
 import { site } from '../../data/site';
 import { publishedPosts } from '../../lib/content';
@@ -30,6 +34,7 @@ const strings = resolveStrings(links, onDesk);
 const appOrder = ['librechat', 'duet', 'loadstone', 'oaf', 'campfire'];
 const macOrder = ['brewlight', 'caffeinatecat'];
 const workOrder = ['ecg-engine', 'ejercicioysalud', 'underwater-acoustics'];
+const demos: Record<string, any> = { loadstone: LoadstoneCard, caffeinatecat: CaffeinateCard, brewlight: BrewlightCard, duet: DuetCard };
 const mailto = `mailto:${site.email}?subject=${encodeURIComponent('A project for you')}`;
 
 function app(id: string): CollectionEntry<'apps'> {
@@ -89,6 +94,7 @@ function app(id: string): CollectionEntry<'apps'> {
               </div>
             </div>
             <p class="sum">{a.data.summary}</p>
+            {demos[id] && (() => { const Demo = demos[id]; return <Demo />; })()}
             <Platforms platforms={a.data.platform} />
           </Card>
         );
@@ -99,7 +105,7 @@ function app(id: string): CollectionEntry<'apps'> {
       {macOrder.map((id) => {
         const a = app(id);
         return (
-          <Card {...at(id)} kind={id === 'brewlight' ? 'app dark' : 'app'} zone="mac" label={a.data.title} accent={a.data.accent}>
+          <Card {...at(id)} kind={id === 'brewlight' ? 'app card-dark' : 'app'} zone="mac" label={a.data.title} accent={a.data.accent}>
             <div class="app-head">
               <img src={a.data.icon} alt="" width="44" height="44" loading="lazy" />
               <div>
@@ -108,6 +114,7 @@ function app(id: string): CollectionEntry<'apps'> {
               </div>
             </div>
             <p class="sum">{a.data.summary}</p>
+            {demos[id] && (() => { const Demo = demos[id]; return <Demo />; })()}
             <Platforms platforms={a.data.platform} />
           </Card>
         );

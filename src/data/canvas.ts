@@ -19,16 +19,16 @@ export const startBounds = { x: 0, y: 30, w: 1640, h: 900 };
 
 export const items: Placement[] = [
   { id: 'name', x: 690, y: 100, w: 520 },
-  { id: 'contact', x: 720, y: 500, w: 290, rotate: -1.5 },
+  { id: 'contact', x: 720, y: 540, w: 290, rotate: -1.5 },
   { id: 'librechat', x: 30, y: 90, w: 280, rotate: -1 },
-  { id: 'duet', x: 340, y: 90, w: 260, rotate: 1.2 },
-  { id: 'loadstone', x: 350, y: 500, w: 250, rotate: -0.8 },
-  { id: 'oaf', x: 40, y: 470, w: 260, rotate: 0.8 },
-  { id: 'campfire', x: 50, y: 780, w: 260, rotate: -1.2 },
+  { id: 'duet', x: 340, y: 80, w: 260, rotate: 1.2 },
+  { id: 'loadstone', x: 350, y: 570, w: 250, rotate: -0.8 },
+  { id: 'oaf', x: 40, y: 340, w: 260, rotate: 0.8 },
+  { id: 'campfire', x: 50, y: 600, w: 260, rotate: -1.2 },
   { id: 'toolbox-board', x: 1280, y: 90, w: 340 },
   { id: 'writing', x: 1300, y: 620, w: 300, rotate: 1 },
   { id: 'brewlight', x: 1710, y: 90, w: 350, rotate: 0.6 },
-  { id: 'caffeinatecat', x: 1730, y: 520, w: 300, rotate: -1 },
+  { id: 'caffeinatecat', x: 1730, y: 450, w: 300, rotate: -1 },
   { id: 'ecg-engine', x: 80, y: 1170, w: 340, rotate: -1 },
   { id: 'ejercicioysalud', x: 470, y: 1190, w: 340, rotate: 0.7 },
   { id: 'underwater-acoustics', x: 860, y: 1160, w: 340, rotate: -0.5 },
@@ -36,9 +36,9 @@ export const items: Placement[] = [
 ];
 
 export const notes: Note[] = [
-  { id: 'note-offline', text: 'LibreChat, Loadstone and Campfire all work with no internet at all.', x: 360, y: 830, rotate: 3 },
-  { id: 'note-help', text: 'Drag to move around the desk. Pinch, or hold Ctrl and scroll, to zoom.', x: 1040, y: 530, rotate: -3, desktopOnly: true },
-  { id: 'note-caffeinate', text: 'Flip the switch. It really does keep this screen awake.', x: 1860, y: 810, rotate: 4 },
+  { id: 'note-offline', text: 'LibreChat, Loadstone and Campfire all work with no internet at all.', x: 70, y: 860, rotate: 3 },
+  { id: 'note-help', text: 'Drag to move around the desk. Pinch, or hold Ctrl and scroll, to zoom.', x: 1040, y: 570, rotate: -3, desktopOnly: true },
+  { id: 'note-caffeinate', text: 'Flip the switch. It really does keep this screen awake.', x: 1800, y: 820, rotate: 4 },
   { id: 'note-work', text: 'Two of these were for clients in Zaragoza, Spain.', x: 1010, y: 1420, rotate: -2 },
 ];
 

@@ -1,0 +1,64 @@
+<div class="brew" data-brew>
+  <label class="field">
+    <span class="prompt" aria-hidden="true">›</span>
+    <span class="visually-hidden">Search Homebrew packages</span>
+    <input type="search" placeholder="Try git, ffmpeg or firefox" autocomplete="off" spellcheck="false" data-brew-q />
+  </label>
+  <ul class="results" data-brew-results aria-live="polite"></ul>
+  <p class="hint">A snapshot of 340 popular packages. The app searches all of them in about 3 ms.</p>
+</div>
+
+<script>
+  import { searchBrew, type BrewItem } from '../../../lib/cards/brew';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-brew]')) {
+    const input = root.querySelector<HTMLInputElement>('[data-brew-q]')!;
+    const list = root.querySelector<HTMLUListElement>('[data-brew-results]')!;
+    let items: BrewItem[] | null = null;
+    const load = async () => (items ??= (await import('../../../data/brew-sample.json')).default as BrewItem[]);
+
+    input.addEventListener('focus', load, { once: true });
+    input.addEventListener('input', async () => {
+      const all = await load();
+      const q = input.value;
+      list.replaceChildren(
+        ...searchBrew(all, q).map((i) => {
+          const li = document.createElement('li');
+          const name = document.createElement('span');
+          name.className = 'name';
+          name.textContent = i.name;
+          const desc = document.createElement('span');
+          desc.className = 'desc';
+          desc.textContent = i.desc;
+          const cmd = document.createElement('code');
+          cmd.textContent = `brew install ${i.cask ? '--cask ' : ''}${i.name}`;
+          li.append(name, desc, cmd);
+          return li;
+        }),
+      );
+      if (q.trim() && !list.children.length) {
+        const li = document.createElement('li');
+        li.className = 'none';
+        li.textContent = 'Not in this snapshot. The real app would find it.';
+        list.append(li);
+      }
+    });
+  }
+</script>
+
+<style>
+  .brew { margin: 0 0 0.8rem; }
+  .field { display: flex; align-items: center; gap: 0.4rem; background: #111613; border: 1px solid #39423c; border-radius: 10px; padding: 0.35rem 0.7rem; }
+  .prompt { color: #f0a640; font-weight: 700; font-size: 1.2rem; line-height: 1; }
+  input { flex: 1; min-width: 0; background: transparent; border: 0; color: #fff; font: inherit; font-size: 0.95rem; outline: none; }
+  input::placeholder { color: #7f8c83; }
+  .field:focus-within { border-color: #f0a640; }
+  .results { list-style: none; margin: 0.4rem 0 0; padding: 0; display: grid; gap: 0.15rem; }
+  .results :global(li) { display: grid; grid-template-columns: auto 1fr; column-gap: 0.5rem; padding: 0.35rem 0.5rem; border-radius: 6px; font-size: 0.82rem; }
+  .results :global(li:first-child) { background: rgb(240 166 64 / 0.16); }
+  .results :global(.name) { font-weight: 700; color: #f6c27a; }
+  .results :global(.desc) { color: #b9c4bc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .results :global(code) { grid-column: 1 / -1; color: #8fa196; font-size: 0.75rem; background: none; padding: 0; }
+  .results :global(.none) { display: block; color: #b9c4bc; }
+  .hint { margin: 0.5rem 0 0; font-size: 0.75rem; color: #8fa196; }
+</style>

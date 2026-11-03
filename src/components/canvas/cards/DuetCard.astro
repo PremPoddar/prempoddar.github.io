@@ -1,0 +1,95 @@
+<div class="duet" data-duet>
+  <div class="phones" aria-hidden="true">
+    {[0, 1, 2].map((i) => (
+      <div class="phone" data-phone={i}>
+        <div class="disc"><span></span></div>
+        <div class="bar"><span data-progress></span></div>
+        <div class="beat" data-beat></div>
+      </div>
+    ))}
+  </div>
+  <div class="controls">
+    <button type="button" data-play aria-pressed="false">Play on all three</button>
+    <button type="button" data-knock disabled>Knock one out of sync</button>
+  </div>
+  <p class="status" aria-live="polite" data-status>Three phones, one song. Press play.</p>
+</div>
+
+<script>
+  // A toy version of Duet's sync loop: one shared clock, and a phone that drifts
+  // eases its speed back into line instead of jumping.
+  const SONG = 24; // seconds, for the demo
+  const BEAT = 0.5;
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-duet]')) {
+    const phones = [...root.querySelectorAll<HTMLElement>('[data-phone]')];
+    const play = root.querySelector<HTMLButtonElement>('[data-play]')!;
+    const knock = root.querySelector<HTMLButtonElement>('[data-knock]')!;
+    const status = root.querySelector<HTMLElement>('[data-status]')!;
+    const offsets = [0, 0, 0];
+    let playing = false;
+    let songTime = 0;
+    let last = 0;
+    let frame = 0;
+
+    const tick = (now: number) => {
+      const dt = last ? (now - last) / 1000 : 0;
+      last = now;
+      songTime = (songTime + dt) % SONG;
+      let worst = 0;
+      phones.forEach((p, i) => {
+        // ease drift out at up to 15% speed (the real app uses 1.5%, this is sped up so you can watch)
+        const fix = Math.max(-0.15 * dt, Math.min(0.15 * dt, -offsets[i]));
+        offsets[i] += fix;
+        if (Math.abs(offsets[i]) < 0.005) offsets[i] = 0;
+        worst = Math.max(worst, Math.abs(offsets[i]));
+        const t = (songTime + offsets[i] + SONG) % SONG;
+        p.querySelector<HTMLElement>('[data-progress]')!.style.width = `${(t / SONG) * 100}%`;
+        p.querySelector<HTMLElement>('[data-beat]')!.classList.toggle('on', t % BEAT < 0.12);
+        p.style.setProperty('--spin', `${t * 120}deg`);
+      });
+      if (worst > 0) status.textContent = `One phone is ${Math.round(worst * 1000)} ms off. Easing it back without a jump.`;
+      else if (playing) status.textContent = 'In sync. Watch the beat lights.';
+      if (playing) frame = requestAnimationFrame(tick);
+    };
+
+    play.addEventListener('click', () => {
+      playing = !playing;
+      play.setAttribute('aria-pressed', String(playing));
+      play.textContent = playing ? 'Pause all three' : 'Play on all three';
+      knock.disabled = !playing;
+      if (playing) {
+        last = 0;
+        frame = requestAnimationFrame(tick);
+      } else {
+        cancelAnimationFrame(frame);
+        status.textContent = 'Paused on every phone at once.';
+      }
+    });
+
+    knock.addEventListener('click', () => {
+      offsets[1] = 0.6;
+    });
+  }
+</script>
+
+<style>
+  .duet { margin: 0 0 0.8rem; }
+  .phones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.45rem; }
+  .phone { background: #2b1e16; border-radius: 10px; padding: 0.5rem 0.45rem; display: grid; gap: 0.4rem; justify-items: center; }
+  .disc {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: repeating-radial-gradient(#3a2a20 0 2px, #2b1e16 2px 4px);
+    display: grid; place-items: center; transform: rotate(var(--spin, 0deg));
+  }
+  .disc span { width: 12px; height: 12px; border-radius: 50%; background: #c8553d; box-shadow: 4px 0 0 -3px #f6efe6; }
+  .bar { width: 100%; height: 3px; background: #4a372b; border-radius: 2px; overflow: hidden; }
+  .bar span { display: block; height: 100%; width: 0; background: #f6efe6; }
+  .beat { width: 8px; height: 8px; border-radius: 50%; background: #4a372b; }
+  .beat:global(.on) { background: #f2913f; box-shadow: 0 0 8px #f2913f; }
+  .controls { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+  button { font: inherit; font-size: 0.8rem; padding: 0.3rem 0.65rem; border-radius: 999px; border: 1px solid var(--mat-major); background: var(--paper); color: var(--ink); cursor: pointer; }
+  button[aria-pressed='true'] { background: #c8553d; border-color: #c8553d; color: #fff; }
+  button:disabled { opacity: 0.45; cursor: default; }
+  .status { margin: 0.4rem 0 0; font-size: 0.8rem; color: var(--muted); line-height: 1.35; min-height: 2.2em; }
+</style>
