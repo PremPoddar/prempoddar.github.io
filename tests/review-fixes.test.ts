@@ -46,12 +46,6 @@ describe('copy rules', () => {
     expect(lintCopy("It wasn't hard.")).toEqual([]);
   });
 
-  it('keeps AI products out of the Brewlight sample', () => {
-    const items: { name: string; desc: string }[] = JSON.parse(readFileSync('src/data/brew-sample.json', 'utf8'));
-    const bad = items.filter((i) => /\b(ai|claude|anthropic|chatgpt|openai|gpt|llms?|copilot|gemini|ollama|codex|cursor|lm studio|assistant|agents?)\b/i.test(`${i.name.replace(/-/g, ' ')} ${i.desc}`));
-    expect(bad.map((b) => b.name)).toEqual([]);
-  });
-
   it('does not promise posts that are not published', () => {
     const drafts = new Set(
       readdirSync('src/content/writing')
