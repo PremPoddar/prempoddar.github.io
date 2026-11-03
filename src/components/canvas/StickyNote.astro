@@ -1,0 +1,33 @@
+---
+interface Props { id: string; text: string; x: number; y: number; rotate: number; desktopOnly?: boolean }
+const { id, text, x, y, rotate, desktopOnly } = Astro.props;
+---
+<p class:list={['note', { 'desktop-only': desktopOnly }]} data-card={id} style={`--x:${x}px;--y:${y}px;--r:${rotate}deg`}>{text}</p>
+
+<style>
+  .note {
+    margin: 0;
+    background: var(--note);
+    color: var(--note-ink);
+    font-family: var(--hand);
+    font-size: 1.45rem;
+    line-height: 1.15;
+    padding: 1rem 1rem 1.3rem;
+    width: 200px;
+    box-shadow: 0 10px 18px -10px rgb(60 50 0 / 0.45);
+    transform: rotate(var(--r));
+  }
+  .note::before {
+    content: '';
+    position: absolute; left: 50%; top: -9px; width: 64px; height: 20px; translate: -50% 0;
+    background: rgb(255 255 255 / 0.55); border: 1px solid rgb(0 0 0 / 0.05);
+  }
+  .note { position: relative; }
+  @media (min-width: 900px) {
+    :global(.js) .note { position: absolute; left: var(--x); top: var(--y); }
+  }
+  @media (max-width: 899px) {
+    .desktop-only { display: none; }
+    .note { margin: 0.4rem auto; }
+  }
+</style>

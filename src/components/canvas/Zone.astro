@@ -1,0 +1,21 @@
+---
+interface Props { label: string; x: number; y: number; w: number; h: number }
+const { label, x, y, w, h } = Astro.props;
+---
+<div class="zone" aria-hidden="true" style={`left:${x}px;top:${y}px;width:${w}px;height:${h}px`}>
+  <span>{label}</span>
+</div>
+
+<style>
+  .zone {
+    position: absolute;
+    border: 1.5px dashed var(--mat-major);
+    border-radius: 18px;
+    pointer-events: none;
+  }
+  span {
+    position: absolute; top: -0.85rem; left: 1.2rem;
+    background: var(--mat); padding: 0 0.5rem;
+    font-stretch: 125%; font-weight: 700; color: var(--muted); font-size: 1rem;
+  }
+</style>

@@ -1,0 +1,288 @@
+---
+import { existsSync } from 'node:fs';
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Card from './Card.astro';
+import StickyNote from './StickyNote.astro';
+import Zone from './Zone.astro';
+import Platforms from '../Platforms.astro';
+import { zones, items, notes, links, startBounds } from '../../data/canvas';
+import { site } from '../../data/site';
+import { publishedPosts } from '../../lib/content';
+import { resolveStrings } from '../../lib/canvas/strings';
+
+const apps = new Map((await getCollection('apps')).map((a) => [a.id, a]));
+const work = new Map((await getCollection('work')).map((w) => [w.id, w]));
+const posts = publishedPosts(await getCollection('writing'), import.meta.env.PROD);
+const latest = posts[0];
+const tools = await getCollection('toolbox');
+const boardTools = tools.filter((t) => t.id !== 'noxdrop' && existsSync(`public/toolbox/${t.id}.png`)).slice(0, 12);
+
+const at = (id: string) => items.find((i) => i.id === id)!;
+const zoneOf = (id: string) => zones.find((z) => {
+  const p = at(id);
+  return p.x >= z.x && p.x < z.x + z.w && p.y >= z.y && p.y < z.y + z.h;
+})?.id;
+
+const writingId = latest ? latest.id : 'writing';
+const onDesk = new Set<string>([...items.map((i) => (i.id === 'writing' ? writingId : i.id)), ...notes.map((n) => n.id)]);
+const strings = resolveStrings(links, onDesk);
+
+const appOrder = ['librechat', 'duet', 'loadstone', 'oaf', 'campfire'];
+const macOrder = ['brewlight', 'caffeinatecat'];
+const workOrder = ['ecg-engine', 'ejercicioysalud', 'underwater-acoustics'];
+const mailto = `mailto:${site.email}?subject=${encodeURIComponent('A project for you')}`;
+
+function app(id: string): CollectionEntry<'apps'> {
+  return apps.get(id)!;
+}
+---
+<div class="workbench" data-workbench data-start={JSON.stringify(startBounds)} data-strings={JSON.stringify(strings)}>
+  <canvas class="ruler ruler-x" data-ruler="x" aria-hidden="true"></canvas>
+  <canvas class="ruler ruler-y" data-ruler="y" aria-hidden="true"></canvas>
+
+  <div class="tools" data-desk-tools hidden>
+    <button type="button" data-zoom="out" aria-label="Zoom out">−</button>
+    <output data-zoom-readout aria-label="Zoom level">100%</output>
+    <button type="button" data-zoom="in" aria-label="Zoom in">+</button>
+    <button type="button" class="tidy" data-tidy>Tidy up</button>
+  </div>
+
+  <div class="viewport" data-viewport tabindex="0" aria-label="Workbench. Drag or use the arrow keys to move around, plus and minus to zoom, 0 to tidy up.">
+    <div class="world" data-world>
+      {zones.map((z) => <Zone {...z} />)}
+      <svg class="strings" aria-hidden="true" data-strings-layer width="2200" height="1700"></svg>
+
+      <!-- Centre -->
+      <Card {...at('name')} kind="name" label="Prem Poddar">
+        <h1>Prem Poddar</h1>
+        <p class="lead">{site.tagline}</p>
+        <p class="sub">Computer Science student in Mumbai. So far I've built for a medical education company, a college of physicians and an underwater research project, plus seven apps of my own.</p>
+        <p class="actions">
+          <a class="btn" href={mailto}>Email me about a project</a>
+          <a class="btn ghost" href="/resume/">Read my resume</a>
+        </p>
+      </Card>
+
+      <Card {...at('contact')} kind="contact" label="Contact">
+        <p class="cname">Prem Poddar</p>
+        <p class="ctitle">Software developer, {site.location}</p>
+        <ul>
+          <li><a href={`mailto:${site.email}`}>{site.email}</a></li>
+          <li><a href={site.links.github}>github.com/PremPoddar</a></li>
+          <li><a href={site.links.linkedin}>LinkedIn</a></li>
+          <li><a href={site.links.x}>X</a></li>
+        </ul>
+      </Card>
+
+      {notes.filter((n) => n.id === 'note-help').map((n) => <StickyNote {...n} />)}
+
+      <h2 class="stack-heading">Phone apps</h2>
+      {appOrder.map((id) => {
+        const a = app(id);
+        return (
+          <Card {...at(id)} kind="app" zone="apps" label={a.data.title} accent={a.data.accent}>
+            <div class="app-head">
+              <img src={a.data.icon} alt="" width="44" height="44" loading="lazy" />
+              <div>
+                <h3><a href={`/apps/${id}/`}>{a.data.title}</a></h3>
+                <p class="tag">{a.data.tagline}</p>
+              </div>
+            </div>
+            <p class="sum">{a.data.summary}</p>
+            <Platforms platforms={a.data.platform} />
+          </Card>
+        );
+      })}
+      {notes.filter((n) => n.id === 'note-offline').map((n) => <StickyNote {...n} />)}
+
+      <h2 class="stack-heading">Mac apps</h2>
+      {macOrder.map((id) => {
+        const a = app(id);
+        return (
+          <Card {...at(id)} kind={id === 'brewlight' ? 'app dark' : 'app'} zone="mac" label={a.data.title} accent={a.data.accent}>
+            <div class="app-head">
+              <img src={a.data.icon} alt="" width="44" height="44" loading="lazy" />
+              <div>
+                <h3><a href={`/apps/${id}/`}>{a.data.title}</a></h3>
+                <p class="tag">{a.data.tagline}</p>
+              </div>
+            </div>
+            <p class="sum">{a.data.summary}</p>
+            <Platforms platforms={a.data.platform} />
+          </Card>
+        );
+      })}
+      {notes.filter((n) => n.id === 'note-caffeinate').map((n) => <StickyNote {...n} />)}
+
+      <h2 class="stack-heading">Writing</h2>
+      <Card {...at('writing')} id={writingId} kind="writing" zone="writing" label="Writing">
+        {latest ? (
+          <>
+            <p class="kicker">{latest.data.kind === 'guide' ? 'Latest guide' : 'Latest post'}</p>
+            <h3><a href={`/writing/${latest.id}/`}>{latest.data.title}</a></h3>
+            <p class="sum">{latest.data.description}</p>
+            <p><a href="/writing/">All writing</a></p>
+          </>
+        ) : (
+          <>
+            <h3>Writing</h3>
+            <p class="sum">The first posts are still on the workbench. The <a href="/rss.xml">RSS feed</a> will tell you when they land.</p>
+          </>
+        )}
+      </Card>
+
+      <h2 class="stack-heading">Toolbox</h2>
+      <Card {...at('toolbox-board')} kind="board" zone="toolbox" label="Toolbox">
+        <h3><a href="/toolbox/">Toolbox</a></h3>
+        <p class="sum">Tools, apps and sites I'd point a friend to, each with a line on why.</p>
+        <ul class="pegs">
+          {boardTools.map((t) => (
+            <li><a href={t.data.url} title={t.data.name}><img src={`/toolbox/${t.id}.png`} alt={t.data.name} width="36" height="36" loading="lazy" /></a></li>
+          ))}
+        </ul>
+        <p><a href="/toolbox/">Open the toolbox ({tools.length} picks)</a></p>
+      </Card>
+
+      <h2 class="stack-heading">Client work</h2>
+      {workOrder.map((id) => {
+        const w = work.get(id)!;
+        return (
+          <Card {...at(id)} kind="index" zone="work" label={w.data.title}>
+            <p class="kicker">{w.data.client}</p>
+            <h3><a href={`/work/${id}/`}>{w.data.title}</a></h3>
+            <p class="when">{w.data.when}</p>
+            <p class="sum">{w.data.summary}</p>
+          </Card>
+        );
+      })}
+      {notes.filter((n) => n.id === 'note-work').map((n) => <StickyNote {...n} />)}
+
+      <h2 class="stack-heading">About</h2>
+      <Card {...at('about')} kind="about" zone="about" label="About">
+        <h3>About me</h3>
+        <p>I'm finishing a BSc in Computer Science at Mithibai College in Mumbai, graduating in 2027 with a CGPA of 8.62 so far. I also took part in the Smart India Hackathon.</p>
+        <p>Most days that means Kotlin, Swift, C++ or JavaScript. Some days it's circuits and a test plan for hardware. I speak English, Spanish and Hindi.</p>
+        <p class="actions"><a href="/resume/">Resume</a><a href="/work/">Client work</a><a href="/apps/">All apps</a></p>
+      </Card>
+    </div>
+  </div>
+
+  <nav class="pill" aria-label="Main">
+    <a href="/apps/">Apps</a>
+    <a href="/work/">Work</a>
+    <a href="/writing/">Writing</a>
+    <a href="/toolbox/">Toolbox</a>
+    <a href="/resume/">Resume</a>
+  </nav>
+</div>
+
+<style>
+  .workbench { position: relative; }
+  .stack-heading { display: none; }
+
+  /* Phone and no-JS layout: a simple stack of cards */
+  .world { display: flex; flex-direction: column; gap: 1rem; padding: 1rem 1rem 6rem; max-width: 34rem; margin: 0 auto; }
+  .world :global(.zone), .strings, .ruler, .tools { display: none; }
+  .stack-heading { display: block; font-size: var(--step-1); margin: 1.4rem 0 0; color: var(--muted); font-stretch: 125%; }
+
+  @media (min-width: 900px) {
+    :global(.js) .workbench { height: 100vh; height: 100dvh; overflow: hidden; }
+    :global(.js) .viewport {
+      position: absolute; inset: 0; overflow: hidden; cursor: grab; touch-action: none; outline: none;
+      background-color: var(--mat);
+      background-image:
+        linear-gradient(var(--mat-major) 1px, transparent 1px),
+        linear-gradient(90deg, var(--mat-major) 1px, transparent 1px),
+        linear-gradient(var(--mat-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--mat-line) 1px, transparent 1px);
+      background-size: var(--major) var(--major), var(--major) var(--major), var(--minor) var(--minor), var(--minor) var(--minor);
+      background-position: var(--bx) var(--by);
+    }
+    :global(.js) .viewport:focus-visible { box-shadow: inset 0 0 0 3px var(--pen); }
+    :global(.js) .viewport.dragging { cursor: grabbing; user-select: none; }
+    :global(.js) .world {
+      display: block; position: absolute; left: 0; top: 0; width: 2200px; height: 1700px; padding: 0; max-width: none; margin: 0;
+      transform-origin: 0 0; will-change: transform;
+    }
+    :global(.js) .world.easing { transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+    :global(.js) .world :global(.zone), :global(.js) .strings { display: block; }
+    :global(.js) .stack-heading { display: none; }
+    :global(.js) .strings { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+    :global(.js) .ruler { display: block; position: absolute; z-index: 5; background: rgb(253 253 251 / 0.88); pointer-events: none; }
+    :global(.js) .ruler-x { left: 0; top: 0; width: 100%; height: 24px; border-bottom: 1px solid var(--mat-major); }
+    :global(.js) .ruler-y { left: 0; top: 0; width: 24px; height: 100%; border-right: 1px solid var(--mat-major); }
+    :global(.js) .tools:not([hidden]) {
+      display: flex; position: absolute; z-index: 6; top: 36px; right: 16px; gap: 0.3rem; align-items: center;
+      background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 999px; padding: 0.25rem; box-shadow: var(--lift);
+    }
+    .tools button { font: inherit; border: 0; background: transparent; color: var(--ink); border-radius: 999px; cursor: pointer; min-width: 2rem; height: 2rem; font-size: 1.1rem; }
+    .tools button:hover { background: var(--mat); }
+    .tools .tidy { font-size: var(--step--1); padding: 0 0.8rem; background: var(--ink); color: var(--paper); }
+    .tools .tidy:hover { background: var(--pen); }
+    .tools output { font-size: 0.8rem; min-width: 3.2rem; text-align: center; font-variant-numeric: tabular-nums; color: var(--muted); }
+  }
+
+  .pill {
+    position: fixed; z-index: 10; left: 50%; bottom: 18px; translate: -50% 0;
+    display: flex; gap: 0.15rem; padding: 0.3rem; border-radius: 999px;
+    background: var(--ink); box-shadow: var(--lift-high); max-width: calc(100vw - 24px); overflow-x: auto;
+  }
+  .pill a { color: var(--paper); text-decoration: none; padding: 0.45rem 0.85rem; border-radius: 999px; font-size: var(--step--1); white-space: nowrap; }
+  .pill a:hover, .pill a:focus-visible { background: rgb(255 255 255 / 0.14); }
+  @media (max-width: 480px) { .pill a { padding: 0.45rem 0.55rem; font-size: 0.8rem; } }
+
+  /* Strings */
+  .strings :global(path) { fill: none; stroke: #8a978d; stroke-width: 1.6; stroke-dasharray: 2 5; stroke-linecap: round; }
+  .strings :global(circle) { fill: var(--pen); }
+
+  /* Card contents */
+  .world :global(h3) { font-size: var(--step-1); }
+  .world :global(h3 a) { color: var(--ink); text-decoration: none; }
+  .world :global(h3 a:hover) { color: var(--pen); text-decoration: underline; }
+  .world :global(.sum) { margin: 0.5rem 0 0.7rem; font-size: 0.95rem; line-height: 1.45; }
+  .world :global(.kicker) { margin: 0 0 0.2rem; color: var(--muted); font-size: var(--step--1); }
+
+  .world :global(.card-name) { padding: 1.8rem 2rem 1.6rem; border-radius: 4px; }
+  .world :global(.card-name h1) { font-size: clamp(2.6rem, 8vw, 4.1rem); font-stretch: 125%; font-weight: 800; line-height: 0.98; letter-spacing: -0.02em; }
+  .world :global(.card-name .lead) { font-size: var(--step-1); line-height: 1.4; margin: 1rem 0 0.6rem; }
+  .world :global(.card-name .sub) { color: var(--muted); margin: 0 0 1.2rem; font-size: 0.97rem; }
+  .world :global(.actions) { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 0; }
+  .world :global(.btn) { display: inline-block; padding: 0.55rem 1rem; border-radius: 999px; background: var(--pen); color: #fff; text-decoration: none; font-size: 0.95rem; }
+  .world :global(.btn:hover) { background: var(--ink); }
+  .world :global(.btn.ghost) { background: transparent; color: var(--ink); border: 1px solid var(--mat-major); }
+
+  .world :global(.card-contact) { border-radius: 4px; background: #fff; }
+  .world :global(.cname) { margin: 0; font-weight: 750; font-stretch: 120%; }
+  .world :global(.ctitle) { margin: 0 0 0.7rem; color: var(--muted); font-size: var(--step--1); }
+  .world :global(.card-contact ul) { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.2rem; font-size: 0.92rem; }
+
+  .world :global(.card-app) { border-top: 5px solid var(--accent); }
+  .world :global(.app-head) { display: flex; gap: 0.75rem; align-items: center; }
+  .world :global(.app-head img) { border-radius: 11px; flex: none; }
+  .world :global(.tag) { margin: 0; color: var(--muted); font-size: 0.88rem; line-height: 1.3; }
+
+  .world :global(.card-dark) { background: #1c211e; color: #e6ece7; border-color: #2c332e; }
+  .world :global(.card-dark h3 a) { color: #fff; }
+  .world :global(.card-dark .tag) { color: #a9b5ac; }
+
+  .world :global(.card-index) {
+    border-radius: 3px;
+    background-color: #fff;
+    background-image: repeating-linear-gradient(transparent 0 25px, #cfe0f5 25px 26px);
+    background-position: 0 0.6rem;
+  }
+  .world :global(.card-index .kicker) { border-bottom: 2px solid #e64f4f; padding-bottom: 0.45rem; margin: 0 -1.2rem 0.6rem; padding-inline: 1.2rem; }
+  .world :global(.card-index .when) { margin: 0.3rem 0 0; color: var(--muted); font-size: var(--step--1); }
+
+  .world :global(.card-board) { background: #f6f7f2; }
+  .world :global(.pegs) {
+    list-style: none; padding: 0.8rem; margin: 0 0 0.8rem; display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.5rem;
+    background-color: #e9e4d6;
+    background-image: radial-gradient(#cbc3ae 2px, transparent 2.5px);
+    background-size: 14px 14px; border-radius: 6px;
+  }
+  .world :global(.pegs img) { display: block; width: 36px; height: 36px; border-radius: 8px; background: #fff; box-shadow: 0 2px 4px rgb(0 0 0 / 0.15); }
+  .world :global(.card-about p) { font-size: 0.95rem; margin: 0.5rem 0; }
+  .world :global(.card-about .actions a) { font-size: 0.95rem; }
+  .world :global(.card-writing) { border-left: 4px solid var(--pen); }
+</style>

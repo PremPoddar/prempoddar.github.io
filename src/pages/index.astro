@@ -1,1 +1,37 @@
-<html lang="en"><head><meta charset="utf-8"><title>Prem Poddar</title></head><body><p>Prem Poddar</p></body></html>
+---
+import Base from '../layouts/Base.astro';
+import Workbench from '../components/canvas/Workbench.astro';
+import { site } from '../data/site';
+---
+<Base title={site.name} description={`${site.tagline} Apps, client work, writing and a toolbox of things I recommend.`}>
+  <script is:inline slot="head">document.documentElement.classList.add('js');</script>
+  <a class="skip" href="#list">Skip to the list view</a>
+  <main>
+    <Workbench />
+    <section id="list" class="list" aria-label="Everything on the desk as a list">
+      <h2>Everything on the desk</h2>
+      <ul>
+        <li><a href="/apps/">Apps</a>: LibreChat, Duet, OAF, Loadstone, Campfire, CaffeinateCat and Brewlight</li>
+        <li><a href="/work/">Client work</a>: an ECG engine for iOS and Android, ejercicioysalud.org and an underwater modem evaluation</li>
+        <li><a href="/writing/">Writing</a>: posts and guides</li>
+        <li><a href="/toolbox/">Toolbox</a>: tools and sites I recommend</li>
+        <li><a href="/resume/">Resume</a>, or email <a href={`mailto:${site.email}`}>{site.email}</a></li>
+      </ul>
+    </section>
+  </main>
+  <script>
+    import { initWorkbench } from '../scripts/canvas';
+    initWorkbench();
+  </script>
+</Base>
+
+<style>
+  .list { max-width: 40rem; margin: 0 auto; padding: 2rem 1rem 7rem; }
+  .list h2 { font-size: var(--step-1); margin-bottom: 0.6rem; }
+  .list ul { padding-left: 1.1rem; margin: 0; }
+  .list li { margin-bottom: 0.4rem; }
+  @media (min-width: 900px) {
+    :global(.js) .list { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    :global(.js) .list:focus-within, :global(.js) .list:target { position: static; width: auto; height: auto; clip: auto; overflow: visible; }
+  }
+</style>
