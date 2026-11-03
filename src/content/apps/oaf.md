@@ -9,7 +9,7 @@ icon: /apps/oaf/icon.svg
 screenshots: [/apps/oaf/showcase.jpg]
 accent: "#f2913f"
 links:
-  site: https://prempoddar.is-a.dev/OAF/
+  site: https://prempoddar.github.io/OAF/
   github: https://github.com/PremPoddar/OAF
 related: [oaf-one-app-every-file]
 ---

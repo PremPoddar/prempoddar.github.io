@@ -9,7 +9,7 @@ icon: /apps/loadstone/icon.png
 screenshots: [/apps/loadstone/showcase.jpg]
 accent: "#2f8f6b"
 links:
-  site: https://prempoddar.is-a.dev/Loadstone/
+  site: https://prempoddar.github.io/Loadstone/
   github: https://github.com/PremPoddar/Loadstone
   store: https://play.google.com/store/apps/details?id=com.prempoddar.loadstone
 related: [librechat]

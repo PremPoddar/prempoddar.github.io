@@ -35,6 +35,9 @@ const work = defineCollection({
     summary: z.string(),
     order: z.number(),
     link: z.string().url().optional(),
+    highlights: z.array(z.string()).default([]),
+    stack: z.array(z.string()).default([]),
+    visual: z.enum(['ecg', 'site', 'sonar']).optional(),
     related: z.array(z.string()).default([]),
   }),
 });

@@ -89,7 +89,7 @@ function app(id: string): CollectionEntry<'apps'> {
             <div class="app-head">
               <img src={a.data.icon} alt="" width="44" height="44" loading="lazy" />
               <div>
-                <h3><a href={`/apps/${id}/`}>{a.data.title}</a></h3>
+                <h3><a href={a.data.links.site}>{a.data.title}</a></h3>
                 <p class="tag">{a.data.tagline}</p>
               </div>
             </div>
@@ -109,7 +109,7 @@ function app(id: string): CollectionEntry<'apps'> {
             <div class="app-head">
               <img src={a.data.icon} alt="" width="44" height="44" loading="lazy" />
               <div>
-                <h3><a href={`/apps/${id}/`}>{a.data.title}</a></h3>
+                <h3><a href={a.data.links.site}>{a.data.title}</a></h3>
                 <p class="tag">{a.data.tagline}</p>
               </div>
             </div>
@@ -224,6 +224,7 @@ function app(id: string): CollectionEntry<'apps'> {
     }
     .tools button { font: inherit; border: 0; background: transparent; color: var(--ink); border-radius: 999px; cursor: pointer; min-width: 2rem; height: 2rem; font-size: 1.1rem; }
     .tools button:hover { background: var(--mat); }
+    .tools button:disabled { opacity: 0.35; cursor: default; background: transparent; }
     .tools .tidy { font-size: var(--step--1); padding: 0 0.8rem; background: var(--ink); color: var(--paper); }
     .tools .tidy:hover { background: var(--pen); }
     .tools output { font-size: 0.8rem; min-width: 3.2rem; text-align: center; font-variant-numeric: tabular-nums; color: var(--muted); }

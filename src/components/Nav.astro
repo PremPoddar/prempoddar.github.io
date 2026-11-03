@@ -1,5 +1,6 @@
 ---
 const links = [
+  { href: '/', label: 'Home' },
   { href: '/apps/', label: 'Apps' },
   { href: '/work/', label: 'Work' },
   { href: '/writing/', label: 'Writing' },
@@ -13,7 +14,7 @@ const path = Astro.url.pathname;
   <nav aria-label="Main">
     <ul>
       {links.map((l) => (
-        <li><a href={l.href} aria-current={path.startsWith(l.href) ? 'page' : undefined}>{l.label}</a></li>
+        <li><a href={l.href} aria-current={(l.href === '/' ? path === '/' : path.startsWith(l.href)) ? 'page' : undefined}>{l.label}</a></li>
       ))}
     </ul>
   </nav>
@@ -22,7 +23,7 @@ const path = Astro.url.pathname;
 <style>
   .topbar {
     display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
-    max-width: 62rem; margin: 0 auto; padding: 1.1rem 1rem;
+    max-width: 74rem; margin: 0 auto; padding: 1.1rem 1rem;
   }
   .home { font-weight: 750; font-stretch: 118%; color: var(--ink); text-decoration: none; font-size: 1.05rem; }
   ul { display: flex; gap: 0.25rem; list-style: none; margin: 0; padding: 0; flex-wrap: wrap; }

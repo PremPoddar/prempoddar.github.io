@@ -1,0 +1,89 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Platforms from './Platforms.astro';
+
+interface Props {
+  app: CollectionEntry<'apps'>;
+  hero?: boolean;
+}
+const { app, hero = false } = Astro.props;
+const d = app.data;
+---
+<article class:list={['app', { hero }]} style={`--accent: ${d.accent}`}>
+  <div class="shot">
+    <img src={d.screenshots[0]} alt={`Screens from ${d.title}`} loading="lazy" />
+  </div>
+  <div class="body">
+    <div class="head">
+      <img class="icon" src={d.icon} alt="" width="56" height="56" loading="lazy" />
+      <div>
+        <h3><a class="main" href={d.links.site}>{d.title}</a></h3>
+        <p class="tagline">{d.tagline}</p>
+      </div>
+    </div>
+    <p class="summary">{d.summary}</p>
+    <Platforms platforms={d.platform} />
+    <ul class="actions">
+      <li><span class="open">Open {d.title}<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5" /></svg></span></li>
+      {d.links.store && <li><a href={d.links.store}>Google Play</a></li>}
+      <li><a href={d.links.github}>Source</a></li>
+      <li><a href={`/apps/${app.id}/`}>How I built it</a></li>
+    </ul>
+  </div>
+</article>
+
+<style>
+  .app {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    background: var(--paper);
+    border: 1px solid var(--paper-edge);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: var(--lift);
+    transition: box-shadow 200ms, translate 200ms;
+  }
+  .app:hover { box-shadow: var(--lift-high); translate: 0 -2px; }
+  .app:focus-within { box-shadow: 0 0 0 3px var(--accent), var(--lift-high); }
+
+  .shot {
+    aspect-ratio: 16 / 9;
+    background: color-mix(in srgb, var(--accent) 22%, #101411);
+    overflow: hidden;
+  }
+  .shot img { width: 100%; height: 100%; object-fit: cover; display: block; transition: scale 400ms ease; }
+  .app:hover .shot img { scale: 1.03; }
+
+  .body { position: relative; padding: 0 1.4rem 1.3rem; display: grid; gap: 0.7rem; align-content: start; }
+  .head { position: relative; padding-top: 2.3rem; }
+  .icon { position: absolute; top: -30px; left: 0; border-radius: 15px; box-shadow: 0 0 0 4px var(--paper), var(--lift); background: var(--paper); }
+  h3 { font-size: var(--step-2); font-stretch: 118%; line-height: 1; }
+  .main { color: var(--ink); text-decoration: none; }
+  /* The whole card opens the app's own site */
+  .main::after { content: ''; position: absolute; inset: 0; z-index: 1; }
+  .main:focus-visible { outline: none; }
+  .tagline { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.95rem; }
+  .summary { margin: 0; line-height: 1.5; }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 0.45rem; list-style: none; padding: 0; margin: 0.2rem 0 0; }
+  .actions a, .open {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 0.38rem 0.8rem; border-radius: 999px; font-size: 0.88rem; text-decoration: none;
+    border: 1px solid var(--mat-major); color: var(--ink); background: var(--paper);
+  }
+  .actions a { position: relative; z-index: 2; }
+  .actions a:hover { border-color: var(--ink); }
+  .open { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .open svg { width: 0.9rem; height: 0.9rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+  @media (min-width: 56rem) {
+    .hero { grid-column: 1 / -1; grid-template-rows: none; grid-template-columns: 1.35fr 1fr; }
+    .hero .shot { aspect-ratio: auto; height: 100%; min-height: 22rem; }
+    .hero .body { padding: 2rem 2rem 1.8rem; align-content: center; }
+    .hero .head { padding-top: 0; display: flex; gap: 0.9rem; align-items: center; }
+    .hero .icon { position: static; }
+    .hero h3 { font-size: var(--step-3); }
+    .hero .summary { font-size: var(--step-1); line-height: 1.45; }
+  }
+</style>

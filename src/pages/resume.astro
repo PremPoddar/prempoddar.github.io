@@ -43,7 +43,7 @@ const apps = byOrder(await getCollection('apps'));
     <h2>Apps</h2>
     <ul class="apps">
       {apps.map((a) => (
-        <li><a href={`/apps/${a.id}/`}>{a.data.title}</a><span>{a.data.tagline}</span></li>
+        <li><a href={a.data.links.site}>{a.data.title}</a><span>{a.data.tagline}</span></li>
       ))}
     </ul>
   </section>

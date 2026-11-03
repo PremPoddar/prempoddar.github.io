@@ -1,0 +1,83 @@
+---
+// Small illustrations for the client work cards. The ECG trace and sonar are generic drawings,
+// not taken from the client's product.
+interface Props { kind?: 'ecg' | 'site' | 'sonar'; link?: string; title: string }
+const { kind, link, title } = Astro.props;
+const beat = 'l 18 0 l 6 -6 l 6 6 l 10 0 l 4 8 l 6 -58 l 6 66 l 5 -16 l 9 0 l 10 -12 l 12 12 l 26 0';
+---
+{kind === 'ecg' && (
+  <div class="visual ecg" aria-hidden="true">
+    <svg viewBox="0 0 480 200" preserveAspectRatio="none">
+      <defs>
+        <pattern id="ecg-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M20 0H0V20" fill="none" stroke="#f3b9b9" stroke-width="0.6" />
+        </pattern>
+        <pattern id="ecg-grid-big" width="100" height="100" patternUnits="userSpaceOnUse">
+          <path d="M100 0H0V100" fill="none" stroke="#eb9a9a" stroke-width="1.2" />
+        </pattern>
+      </defs>
+      <rect width="480" height="200" fill="#fff6f4" />
+      <rect width="480" height="200" fill="url(#ecg-grid)" />
+      <rect width="480" height="200" fill="url(#ecg-grid-big)" />
+      <path class="trace" d={`M0 120 ${beat} ${beat} ${beat} ${beat}`} fill="none" stroke="#c62828" stroke-width="2.4" stroke-linejoin="round" />
+    </svg>
+    <p class="label">C++ core <span>iOS</span><span>Android</span></p>
+  </div>
+)}
+{kind === 'site' && (
+  <a class="visual site" href={link} tabindex="-1" aria-hidden="true">
+    <div class="browser">
+      <div class="bar"><i></i><i></i><i></i><span>{link && new URL(link).host}</span></div>
+      <img src="/work/ejercicioysalud.jpg" alt="" loading="lazy" />
+    </div>
+  </a>
+)}
+{kind === 'sonar' && (
+  <div class="visual sonar" aria-hidden="true">
+    <svg viewBox="0 0 480 200" preserveAspectRatio="xMidYMin meet">
+      <defs>
+        <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#0f4c75" />
+          <stop offset="1" stop-color="#062236" />
+        </linearGradient>
+      </defs>
+      <rect width="480" height="200" fill="url(#sea)" />
+      <path d="M0 18 q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#7fb8dc" stroke-width="1.5" opacity="0.7" />
+      <g fill="#cfe8f7">
+        <rect x="70" y="120" width="34" height="48" rx="6" />
+        <rect x="376" y="120" width="34" height="48" rx="6" />
+      </g>
+      <g fill="none" stroke="#9fd3f0" stroke-width="2" stroke-linecap="round">
+        {[0, 1, 2, 3].map((i) => <path class="wave" style={`animation-delay:${i * 0.5}s`} d={`M${120 + i * 4} ${118 - i * 14} a${30 + i * 26} ${30 + i * 26} 0 0 1 0 ${52 + i * 28}`} />)}
+      </g>
+      <path d="M0 186 q60 -10 120 0 t120 0 t120 0 t120 0 V200 H0 Z" fill="#041826" />
+    </svg>
+    <p class="label">Range <span>Reliability</span><span>Cost</span></p>
+  </div>
+)}
+
+<style>
+  .visual { position: relative; display: block; height: 100%; min-height: 13rem; overflow: hidden; }
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .label {
+    position: absolute; left: 1rem; bottom: 0.9rem; margin: 0; display: flex; gap: 0.35rem; align-items: center;
+    font-size: 0.78rem; font-weight: 600; color: #fff; background: rgb(0 0 0 / 0.55); padding: 0.25rem 0.6rem; border-radius: 999px;
+  }
+  .label span { font-weight: 400; opacity: 0.85; }
+  .label span::before { content: '+'; margin-right: 0.35rem; opacity: 0.6; }
+  .ecg .trace { stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: draw 3.2s ease-out forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .sonar :global(.wave) { opacity: 0; animation: ping 2s ease-out infinite; }
+  @keyframes ping { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
+  .sonar { background: #041826; }
+  .site { background: linear-gradient(135deg, #6f7fe6, #8a5bd6); padding: 1.4rem 1.4rem 0; }
+  .browser { background: #fff; border-radius: 10px 10px 0 0; overflow: hidden; box-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.45); }
+  .bar { display: flex; gap: 0.3rem; align-items: center; padding: 0.45rem 0.6rem; background: #eef0f5; }
+  .bar i { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #c9cdd8; }
+  .bar span { margin-left: 0.5rem; font-size: 0.72rem; color: #5a6072; background: #fff; border-radius: 6px; padding: 0.05rem 0.6rem; }
+  .browser img { display: block; width: 100%; }
+  @media (prefers-reduced-motion: reduce) {
+    .ecg .trace { stroke-dashoffset: 0; }
+    .sonar :global(.wave) { opacity: 0.8; }
+  }
+</style>

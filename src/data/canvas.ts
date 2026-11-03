@@ -14,6 +14,9 @@ export const zones: Zone[] = [
   { id: 'about', label: 'About', x: 1300, y: 1100, w: 790, h: 460 },
 ];
 
+// The whole desk. Panning stops at its edges and zooming out stops once all of it fits.
+export const deskBounds = { x: 0, y: 0, w: 2200, h: 1600 };
+
 // The part of the desk shown when the page opens, and after "Tidy up".
 export const startBounds = { x: 0, y: 30, w: 1640, h: 900 };
 

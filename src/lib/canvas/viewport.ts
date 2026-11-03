@@ -4,13 +4,13 @@ export type Rect = { x: number; y: number; w: number; h: number };
 export const MIN_SCALE = 0.4;
 export const MAX_SCALE = 2;
 
-export function clampScale(s: number): number {
-  return Math.min(MAX_SCALE, Math.max(MIN_SCALE, s));
+export function clampScale(s: number, min = MIN_SCALE, max = MAX_SCALE): number {
+  return Math.min(max, Math.max(min, s));
 }
 
 // Zoom by `factor` while keeping the world point under screen point (px, py) still.
-export function zoomAt(view: View, factor: number, px: number, py: number): View {
-  const scale = clampScale(view.scale * factor);
+export function zoomAt(view: View, factor: number, px: number, py: number, min = MIN_SCALE, max = MAX_SCALE): View {
+  const scale = clampScale(view.scale * factor, min, max);
   if (scale === view.scale) return view;
   const wx = (px - view.x) / view.scale;
   const wy = (py - view.y) / view.scale;
@@ -62,4 +62,21 @@ export function keyToAction(e: { key: string; ctrlKey: boolean; metaKey: boolean
     case '0': return { home: true };
     default: return null;
   }
+}
+
+// The zoom at which the whole desk fits on screen. Zooming out further would only show empty mat.
+export function fitScale(desk: Rect, vw: number, vh: number, padding: number): number {
+  return Math.min(1, Math.max(0.2, Math.min((vw - 2 * padding) / desk.w, (vh - 2 * padding) / desk.h)));
+}
+
+// Keep the desk on screen. When the desk is bigger than the screen on an axis, its edges can come
+// in at most `pad` pixels from the screen edge; when it's smaller, it stays centred on that axis.
+export function clampView(view: View, desk: Rect, vw: number, vh: number, pad: number): View {
+  const axis = (pos: number, start: number, size: number, screen: number) => {
+    const s = size * view.scale;
+    const offset = start * view.scale;
+    if (s + 2 * pad <= screen) return (screen - s) / 2 - offset;
+    return Math.min(pad - offset, Math.max(screen - pad - offset - s, pos));
+  };
+  return { x: axis(view.x, desk.x, desk.w, vw), y: axis(view.y, desk.y, desk.h, vh), scale: view.scale };
 }

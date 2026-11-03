@@ -1,39 +1,49 @@
 ---
 import { getCollection } from 'astro:content';
 import Page from '../../layouts/Page.astro';
-import Platforms from '../../components/Platforms.astro';
+import AppShowcase from '../../components/AppShowcase.astro';
 import { byOrder } from '../../lib/content';
 
 const apps = byOrder(await getCollection('apps'));
+const phone = apps.filter((a) => a.data.platform.includes('android'));
+const mac = apps.filter((a) => a.data.platform.includes('macos'));
+const openSource = apps.length;
 ---
-<Page title="Apps" description="The apps I've built and published for Android, macOS and the web." wide>
-  <h1>Apps</h1>
-  <p class="lede">Things I built because I wanted them to exist. All of them are free, and most are open source.</p>
-  <ul class="grid">
-    {apps.map((a) => (
-      <li style={`--accent: ${a.data.accent}`}>
-        <a href={`/apps/${a.id}/`}>
-          <img src={a.data.icon} alt="" width="56" height="56" loading="lazy" />
-          <span class="title">{a.data.title}</span>
-          <span class="tagline">{a.data.tagline}</span>
-          <Platforms platforms={a.data.platform} />
-        </a>
-      </li>
-    ))}
-  </ul>
+<Page title="Apps" description="The apps I've built and published for Android, macOS and the web." full>
+  <header class="intro">
+    <h1>Apps</h1>
+    <p class="lede">Things I built because I wanted them to exist. Every one is free, with no ads and no account to sign up for. Click any card to open the app's own site.</p>
+    <ul class="facts">
+      <li><strong>{apps.length}</strong> apps</li>
+      <li><strong>{phone.length}</strong> for Android</li>
+      <li><strong>{mac.length}</strong> for macOS</li>
+      <li><strong>{openSource}</strong> with public source</li>
+    </ul>
+  </header>
+
+  <section>
+    <h2>On your phone</h2>
+    <div class="grid">
+      {phone.map((app, i) => <AppShowcase app={app} hero={i === 0} />)}
+    </div>
+  </section>
+
+  <section>
+    <h2>On your Mac</h2>
+    <div class="grid">
+      {mac.map((app) => <AppShowcase app={app} />)}
+    </div>
+  </section>
 </Page>
 
 <style>
-  h1 { font-size: var(--step-3); }
-  .lede { color: var(--muted); max-width: 52ch; margin: 0.6rem 0 2rem; }
-  .grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 1rem; }
-  .grid a {
-    display: grid; gap: 0.45rem; height: 100%; padding: 1.1rem; text-decoration: none; color: var(--ink);
-    border: 1px solid var(--paper-edge); border-radius: 12px; background: var(--paper);
-    border-top: 4px solid var(--accent);
-  }
-  .grid a:hover { box-shadow: var(--lift); }
-  img { border-radius: 14px; }
-  .title { font-weight: 750; font-stretch: 112%; font-size: var(--step-1); }
-  .tagline { color: var(--muted); font-size: 0.95rem; }
+  .intro { max-width: 46rem; margin: 1rem 0 2.5rem; }
+  h1 { font-size: var(--step-4); font-stretch: 125%; font-weight: 800; line-height: 0.95; }
+  .lede { font-size: var(--step-1); line-height: 1.45; color: var(--muted); margin: 1rem 0 1.4rem; }
+  .facts { display: flex; flex-wrap: wrap; gap: 0.5rem; list-style: none; padding: 0; margin: 0; }
+  .facts li { background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 999px; padding: 0.3rem 0.9rem; font-size: 0.92rem; color: var(--muted); }
+  .facts strong { color: var(--ink); font-stretch: 115%; margin-right: 0.2rem; }
+  section { margin-top: 3rem; }
+  h2 { font-size: var(--step-2); margin-bottom: 1.2rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr)); gap: 1.6rem; }
 </style>

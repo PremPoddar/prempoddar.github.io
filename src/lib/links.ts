@@ -12,7 +12,7 @@ export async function allLinkables(): Promise<Map<string, Linkable>> {
     getCollection('writing'),
   ]);
   const map = new Map<string, Linkable>();
-  for (const a of apps) map.set(a.id, { id: a.id, title: a.data.title, href: `/apps/${a.id}/`, kind: 'app' });
+  for (const a of apps) map.set(a.id, { id: a.id, title: a.data.title, href: a.data.links.site, kind: 'app' });
   for (const w of work) map.set(w.id, { id: w.id, title: w.data.title, href: `/work/${w.id}/`, kind: 'work' });
   for (const p of publishedPosts(writing, isProd)) {
     map.set(p.id, { id: p.id, title: p.data.title, href: `/writing/${p.id}/`, kind: 'writing' });

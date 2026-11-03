@@ -9,7 +9,7 @@ icon: /apps/librechat/icon.svg
 screenshots: [/apps/librechat/showcase.jpg]
 accent: "#3b6df0"
 links:
-  site: https://prempoddar.is-a.dev/LibreChat/
+  site: https://prempoddar.github.io/LibreChat/
   github: https://github.com/PremPoddar/LibreChat
 related: [campfire, loadstone]
 ---

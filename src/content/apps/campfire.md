@@ -9,7 +9,7 @@ icon: /apps/campfire/icon.svg
 screenshots: [/apps/campfire/showcase.jpg]
 accent: "#e0633a"
 links:
-  site: https://prempoddar.is-a.dev/Campfire/
+  site: https://prempoddar.github.io/Campfire/
   github: https://github.com/PremPoddar/Campfire
 related: [librechat]
 ---

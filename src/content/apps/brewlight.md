@@ -9,7 +9,7 @@ icon: /apps/brewlight/icon.png
 screenshots: [/apps/brewlight/showcase.jpg]
 accent: "#f0a640"
 links:
-  site: https://prempoddar.is-a.dev/Brewlight/
+  site: https://prempoddar.github.io/Brewlight/
   github: https://github.com/PremPoddar/Brewlight
 related: [caffeinatecat]
 ---

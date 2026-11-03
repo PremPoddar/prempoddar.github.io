@@ -7,6 +7,12 @@ where: Zaragoza, Spain
 summary: I designed and shipped the college's public site for exercise guidance for heart patients, in two weeks.
 order: 2
 link: https://ejercicioysalud.org
+highlights:
+  - Site architecture and a multilingual content model
+  - Clinical guides and embedded video training
+  - Responsive, accessible front end, live in two weeks
+stack: [Web, Accessibility, Multilingual content]
+visual: site
 related: [ecg-engine]
 ---
 

@@ -1,34 +1,105 @@
 ---
 import { getCollection } from 'astro:content';
 import Page from '../../layouts/Page.astro';
+import WorkVisual from '../../components/WorkVisual.astro';
 import { byOrder } from '../../lib/content';
+import { site } from '../../data/site';
 
 const work = byOrder(await getCollection('work'));
+const mailto = `mailto:${site.email}?subject=${encodeURIComponent('A project for you')}`;
 ---
-<Page title="Client work" description="Projects I've delivered for clients: native apps, a medical website and a hardware evaluation.">
-  <h1>Client work</h1>
-  <p class="lede">Paid projects, from the first conversation to the handover.</p>
+<Page title="Client work" description="Projects I've delivered for clients: native apps, a medical website and a hardware evaluation." full>
+  <header class="intro">
+    <h1>Client work</h1>
+    <p class="lede">Paid projects for clients in Spain: a medical app with its own engine, a public health website and a hardware evaluation that picked the vendor.</p>
+  </header>
+
   <ol class="jobs">
     {work.map((w) => (
-      <li>
-        <p class="when">{w.data.when}</p>
-        <h2><a href={`/work/${w.id}/`}>{w.data.title}</a></h2>
-        <p class="client">{w.data.client}, {w.data.role.toLowerCase()}</p>
-        <p>{w.data.summary}</p>
+      <li class="job">
+        <WorkVisual kind={w.data.visual} link={w.data.link} title={w.data.title} />
+        <div class="body">
+          <p class="meta">
+            <span>{w.data.when}</span>
+            <span>{w.data.where}</span>
+          </p>
+          <h2><a href={`/work/${w.id}/`}>{w.data.title}</a></h2>
+          <p class="client">{w.data.client}<span>{w.data.role}</span></p>
+          <p class="summary">{w.data.summary}</p>
+          <ul class="did">
+            {w.data.highlights.map((h) => <li>{h}</li>)}
+          </ul>
+          <ul class="stack" aria-label="Skills used">
+            {w.data.stack.map((s) => <li>{s}</li>)}
+          </ul>
+          <p class="actions">
+            <a class="primary" href={`/work/${w.id}/`}>Read the case study</a>
+            {w.data.link && <a href={w.data.link}>Visit {new URL(w.data.link).host}</a>}
+          </p>
+        </div>
       </li>
     ))}
   </ol>
+
+  <aside class="cta">
+    <h2>Have a project like these?</h2>
+    <p>Tell me what you need and when you need it.</p>
+    <a class="primary" href={mailto}>Email {site.email}</a>
+  </aside>
 </Page>
 
 <style>
-  h1 { font-size: var(--step-3); }
-  .lede { color: var(--muted); margin: 0.6rem 0 2rem; }
-  .jobs { list-style: none; padding: 0; margin: 0; display: grid; gap: 2rem; }
-  .jobs li { border-left: 3px solid var(--pen); padding-left: 1.1rem; }
-  .when { margin: 0; color: var(--muted); font-size: var(--step--1); }
-  h2 { font-size: var(--step-1); margin: 0.2rem 0; }
+  .intro { max-width: 46rem; margin: 1rem 0 2.5rem; }
+  h1 { font-size: var(--step-4); font-stretch: 125%; font-weight: 800; line-height: 0.95; }
+  .lede { font-size: var(--step-1); line-height: 1.45; color: var(--muted); margin: 1rem 0 0; }
+
+  .jobs { list-style: none; padding: 0; margin: 0; display: grid; gap: 1.8rem; }
+  .job {
+    display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 18px; overflow: hidden; box-shadow: var(--lift);
+  }
+  .job:nth-child(even) > :first-child { order: 2; }
+  .body { padding: 1.8rem 2rem; display: grid; gap: 0.75rem; align-content: start; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; }
+  .meta span { font-size: 0.8rem; color: var(--muted); background: var(--mat); border-radius: 999px; padding: 0.15rem 0.65rem; }
+  h2 { font-size: var(--step-2); }
   h2 a { color: var(--ink); text-decoration: none; }
   h2 a:hover { color: var(--pen); }
-  .client { margin: 0 0 0.4rem; color: var(--muted); }
-  .jobs p:last-child { margin: 0; }
+  .client { margin: 0; font-weight: 650; display: flex; flex-wrap: wrap; gap: 0 0.6rem; }
+  .client span { font-weight: 400; color: var(--muted); }
+  .summary { margin: 0; font-size: 1.05rem; line-height: 1.5; }
+  .did { list-style: none; padding: 0; margin: 0.2rem 0 0; display: grid; gap: 0.45rem; }
+  .did li { position: relative; padding-left: 1.6rem; font-size: 0.97rem; line-height: 1.45; }
+  .did li::before {
+    content: ''; position: absolute; left: 0; top: 0.3em; width: 0.9rem; height: 0.9rem; border-radius: 4px;
+    background: var(--pen-soft); box-shadow: inset 0 0 0 1.5px var(--pen);
+  }
+  .did li::after {
+    content: ''; position: absolute; left: 0.28rem; top: 0.42em; width: 0.32rem; height: 0.52rem;
+    border: solid var(--pen); border-width: 0 2px 2px 0; transform: rotate(45deg);
+  }
+  .stack { display: flex; flex-wrap: wrap; gap: 0.35rem; list-style: none; padding: 0; margin: 0.2rem 0 0; }
+  .stack li { font-size: 0.78rem; border: 1px solid var(--mat-major); border-radius: 999px; padding: 0.1rem 0.6rem; color: var(--muted); }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.4rem 0 0; }
+  .actions a, .cta a {
+    display: inline-block; padding: 0.5rem 1rem; border-radius: 999px; text-decoration: none; font-size: 0.92rem;
+    border: 1px solid var(--mat-major); color: var(--ink);
+  }
+  .actions a.primary { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .actions a.primary:hover { background: var(--pen); border-color: var(--pen); }
+
+  .cta {
+    margin: 3rem 0 0; padding: 2rem; border-radius: 18px; background: var(--ink); color: var(--paper);
+    display: grid; gap: 0.6rem; justify-items: start;
+  }
+  .cta h2 { font-size: var(--step-2); }
+  .cta p { margin: 0; color: #c4cec7; max-width: 50ch; }
+  .cta a.primary { background: var(--paper); color: var(--ink); border-color: var(--paper); margin-top: 0.4rem; }
+  .cta a.primary:hover { background: var(--note); border-color: var(--note); }
+
+  @media (max-width: 52rem) {
+    .job { grid-template-columns: 1fr; }
+    .job:nth-child(even) > :first-child { order: 0; }
+    .body { padding: 1.4rem; }
+  }
 </style>

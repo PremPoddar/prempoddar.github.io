@@ -6,6 +6,12 @@ when: August 2025
 where: Spain
 summary: I tested commercial underwater communication systems and wrote the comparison that picked the vendor.
 order: 3
+highlights:
+  - Tested commercial acoustic modems against real conditions
+  - Wrote the test methods for signal, environment and reliability
+  - Feasibility and cost comparison that picked the vendor
+stack: [Embedded systems, Test methodology, Cost analysis]
+visual: sonar
 related: []
 ---
 

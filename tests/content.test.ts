@@ -27,3 +27,16 @@ describe('byOrder', () => {
     expect(xs[0].data.order).toBe(2);
   });
 });
+
+describe('app links', () => {
+  it('point straight at each app site at an address that works today', async () => {
+    const { readdirSync, readFileSync } = await import('node:fs');
+    for (const f of readdirSync('src/content/apps')) {
+      const text = readFileSync(`src/content/apps/${f}`, 'utf8');
+      const title = text.match(/^title: (.*)$/m)![1];
+      const site = text.match(/^  site: (.*)$/m)![1];
+      const ok = site === `https://prempoddar.github.io/${title}/` || site === 'https://www.noxdrop.com/caffeinatecat.html';
+      expect({ f, site, ok }).toEqual({ f, site, ok: true });
+    }
+  });
+});

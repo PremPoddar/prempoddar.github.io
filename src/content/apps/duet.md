@@ -9,7 +9,7 @@ icon: /apps/duet/icon.svg
 screenshots: [/apps/duet/showcase.jpg]
 accent: "#c8553d"
 links:
-  site: https://prempoddar.is-a.dev/Duet/
+  site: https://prempoddar.github.io/Duet/
   github: https://github.com/PremPoddar/Duet
 related: [librechat]
 ---

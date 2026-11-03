@@ -6,6 +6,12 @@ when: June to August 2026
 where: Remote, for a team in Zaragoza, Spain
 summary: I built a new ECG engine in C++ from scratch and the Swift and Kotlin apps around it.
 order: 1
+highlights:
+  - One proprietary C++ ECG engine, shared by iOS and Android
+  - Native Swift and Kotlin apps with Simulate, Practice and Learn modules
+  - English and Spanish, store listings and the landing site
+stack: [C++, Swift, Kotlin, iOS, Android]
+visual: ecg
 related: [ejercicioysalud]
 ---
 

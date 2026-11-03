@@ -1,11 +1,13 @@
 // Pan, zoom, rulers and strings for the homepage workbench. Only runs on wide screens;
 // phones get the plain stack of cards.
-import { fitView, pan, zoomAt, wheelToZoomFactor, revealPan, keyToAction, type View, type Rect } from '../lib/canvas/viewport';
+import { fitView, fitScale, clampView, pan, zoomAt, wheelToZoomFactor, revealPan, keyToAction, MAX_SCALE, type View, type Rect } from '../lib/canvas/viewport';
+import { deskBounds } from '../data/canvas';
 import { stringPath } from '../lib/canvas/strings';
 
 const UNIT = 24; // desk units per centimetre on the rulers
 const MAJOR = UNIT * 5;
 const KEY_STEP = 80;
+const EDGE = 120; // how far the desk's edge may come in from the screen edge
 
 export function initWorkbench() {
   const root = document.querySelector<HTMLElement>('[data-workbench]');
@@ -33,12 +35,28 @@ function enable(root: HTMLElement): () => void {
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
   tools.hidden = false;
+  const zoomButtons = [...tools.querySelectorAll<HTMLButtonElement>('[data-zoom]')];
   let view: View = home();
   let frame = 0;
 
   function home(): View {
     const r = viewport.getBoundingClientRect();
     return fitView(start, r.width, r.height, 48);
+  }
+
+  function size() {
+    const r = viewport.getBoundingClientRect();
+    return { w: r.width, h: r.height };
+  }
+
+  // Zooming out stops once the whole desk fits on screen.
+  function minScale() {
+    const { w, h } = size();
+    return fitScale(deskBounds, w, h, 24);
+  }
+
+  function zoom(v: View, factor: number, px: number, py: number) {
+    return zoomAt(v, factor, px, py, minScale(), MAX_SCALE);
   }
 
   function render() {
@@ -50,6 +68,8 @@ function enable(root: HTMLElement): () => void {
     viewport.style.setProperty('--bx', `${view.x}px`);
     viewport.style.setProperty('--by', `${view.y}px`);
     readout.value = `${Math.round(view.scale * 100)}%`;
+    zoomButtons[0].disabled = view.scale <= minScale() + 0.001;
+    zoomButtons[1].disabled = view.scale >= MAX_SCALE - 0.001;
     drawRuler(rulerX, 'x');
     drawRuler(rulerY, 'y');
   }
@@ -59,7 +79,8 @@ function enable(root: HTMLElement): () => void {
       world.classList.add('easing');
       window.setTimeout(() => world.classList.remove('easing'), 450);
     }
-    view = next;
+    const { w, h } = size();
+    view = clampView(next, deskBounds, w, h, EDGE);
     if (!frame) frame = requestAnimationFrame(render);
   }
 
@@ -159,7 +180,7 @@ function enable(root: HTMLElement): () => void {
       const before = Math.hypot(prev.x - other.x, prev.y - other.y);
       const after = Math.hypot(e.clientX - other.x, e.clientY - other.y);
       const r = viewport.getBoundingClientRect();
-      if (before > 0) set(zoomAt(view, after / before, (e.clientX + other.x) / 2 - r.left, (e.clientY + other.y) / 2 - r.top));
+      if (before > 0) set(zoom(view, after / before, (e.clientX + other.x) / 2 - r.left, (e.clientY + other.y) / 2 - r.top));
     } else {
       set(pan(view, e.clientX - prev.x, e.clientY - prev.y));
     }
@@ -175,7 +196,7 @@ function enable(root: HTMLElement): () => void {
     e.preventDefault();
     const r = viewport.getBoundingClientRect();
     if (e.ctrlKey || e.metaKey) {
-      set(zoomAt(view, wheelToZoomFactor(e.deltaY, e.ctrlKey), e.clientX - r.left, e.clientY - r.top));
+      set(zoom(view, wheelToZoomFactor(e.deltaY, e.ctrlKey), e.clientX - r.left, e.clientY - r.top));
     } else {
       const k = e.deltaMode === 1 ? 16 : 1;
       set(pan(view, -e.deltaX * k, -e.deltaY * k));
@@ -184,7 +205,7 @@ function enable(root: HTMLElement): () => void {
 
   function zoomCentre(factor: number) {
     const r = viewport.getBoundingClientRect();
-    set(zoomAt(view, factor, r.width / 2, r.height / 2), true);
+    set(zoom(view, factor, r.width / 2, r.height / 2), true);
   }
 
   function onKey(e: KeyboardEvent) {
@@ -225,7 +246,7 @@ function enable(root: HTMLElement): () => void {
     e.preventDefault();
     const g = e as Event & { scale: number; clientX: number; clientY: number };
     const r = viewport.getBoundingClientRect();
-    set(zoomAt(view, g.scale / gestureScale, g.clientX - r.left, g.clientY - r.top));
+    set(zoom(view, g.scale / gestureScale, g.clientX - r.left, g.clientY - r.top));
     gestureScale = g.scale;
   }
 
@@ -240,11 +261,10 @@ function enable(root: HTMLElement): () => void {
     set(pan(view, -dx - Math.sign(dx) * 60, -dy - Math.sign(dy) * 60), true);
   }
 
-  const zoomButtons = [...tools.querySelectorAll<HTMLButtonElement>('[data-zoom]')];
   const tidy = tools.querySelector<HTMLButtonElement>('[data-tidy]')!;
   const onZoomButton = (e: Event) => zoomCentre((e.currentTarget as HTMLElement).dataset.zoom === 'in' ? 1.25 : 0.8);
   const onTidy = () => set(home(), true);
-  const onResize = () => render();
+  const onResize = () => set(view);
 
   viewport.addEventListener('pointerdown', onDown);
   viewport.addEventListener('pointermove', onMove);

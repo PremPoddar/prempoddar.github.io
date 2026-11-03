@@ -7,14 +7,15 @@ interface Props {
   title: string;
   description: string;
   wide?: boolean;
+  full?: boolean;
   ogImage?: string;
 }
-const { title, description, wide = false, ogImage } = Astro.props;
+const { title, description, wide = false, full = false, ogImage } = Astro.props;
 ---
 <Base title={title} description={description} ogImage={ogImage}>
   <a class="skip" href="#main">Skip to content</a>
   <Nav />
-  <main id="main" class:list={['sheet', { wide }]}>
+  <main id="main" class:list={[full ? 'full' : 'sheet', { wide }]}>
     <slot />
   </main>
   <Footer />
@@ -32,6 +33,7 @@ const { title, description, wide = false, ogImage } = Astro.props;
     padding: clamp(1.4rem, 5vw, 3.2rem);
   }
   .sheet.wide { max-width: 62rem; }
+  .full { max-width: 74rem; margin: 0 auto; padding: 0 1rem; }
   @media (max-width: 48rem) {
     .sheet { margin: 0.5rem 0.75rem 0; }
   }
