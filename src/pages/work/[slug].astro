@@ -1,0 +1,37 @@
+---
+import { getCollection, render } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+import Related from '../../components/Related.astro';
+import '../../styles/prose.css';
+
+export async function getStaticPaths() {
+  const work = await getCollection('work');
+  return work.map((job) => ({ params: { slug: job.id }, props: { job } }));
+}
+
+const { job } = Astro.props;
+const { Content } = await render(job);
+const d = job.data;
+---
+<Page title={d.title} description={d.summary}>
+  <p class="client">{d.client}</p>
+  <h1>{d.title}</h1>
+  <dl class="facts">
+    <div><dt>Role</dt><dd>{d.role}</dd></div>
+    <div><dt>When</dt><dd>{d.when}</dd></div>
+    <div><dt>Where</dt><dd>{d.where}</dd></div>
+    {d.link && <div><dt>Live</dt><dd><a href={d.link}>{new URL(d.link).host}</a></dd></div>}
+  </dl>
+  <p class="summary">{d.summary}</p>
+  <article class="prose"><Content /></article>
+  <Related ids={d.related} />
+</Page>
+
+<style>
+  .client { margin: 0 0 0.4rem; color: var(--muted); }
+  h1 { font-size: var(--step-3); }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0.8rem 1.5rem; margin: 1.6rem 0; padding: 1rem 0; border-block: 1px dashed var(--mat-major); }
+  dt { font-size: var(--step--1); color: var(--muted); }
+  dd { margin: 0; }
+  .summary { font-size: var(--step-1); line-height: 1.45; max-width: 40ch; }
+</style>

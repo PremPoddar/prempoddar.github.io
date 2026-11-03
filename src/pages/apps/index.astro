@@ -1,0 +1,39 @@
+---
+import { getCollection } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+import Platforms from '../../components/Platforms.astro';
+import { byOrder } from '../../lib/content';
+
+const apps = byOrder(await getCollection('apps'));
+---
+<Page title="Apps" description="The apps I've built and published for Android, macOS and the web." wide>
+  <h1>Apps</h1>
+  <p class="lede">Things I built because I wanted them to exist. All of them are free, and most are open source.</p>
+  <ul class="grid">
+    {apps.map((a) => (
+      <li style={`--accent: ${a.data.accent}`}>
+        <a href={`/apps/${a.id}/`}>
+          <img src={a.data.icon} alt="" width="56" height="56" loading="lazy" />
+          <span class="title">{a.data.title}</span>
+          <span class="tagline">{a.data.tagline}</span>
+          <Platforms platforms={a.data.platform} />
+        </a>
+      </li>
+    ))}
+  </ul>
+</Page>
+
+<style>
+  h1 { font-size: var(--step-3); }
+  .lede { color: var(--muted); max-width: 52ch; margin: 0.6rem 0 2rem; }
+  .grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 1rem; }
+  .grid a {
+    display: grid; gap: 0.45rem; height: 100%; padding: 1.1rem; text-decoration: none; color: var(--ink);
+    border: 1px solid var(--paper-edge); border-radius: 12px; background: var(--paper);
+    border-top: 4px solid var(--accent);
+  }
+  .grid a:hover { box-shadow: var(--lift); }
+  img { border-radius: 14px; }
+  .title { font-weight: 750; font-stretch: 112%; font-size: var(--step-1); }
+  .tagline { color: var(--muted); font-size: 0.95rem; }
+</style>

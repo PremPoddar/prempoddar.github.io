@@ -1,0 +1,49 @@
+---
+import { getCollection, render } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+import Platforms from '../../components/Platforms.astro';
+import Related from '../../components/Related.astro';
+import '../../styles/prose.css';
+
+export async function getStaticPaths() {
+  const apps = await getCollection('apps');
+  return apps.map((app) => ({ params: { slug: app.id }, props: { app } }));
+}
+
+const { app } = Astro.props;
+const { Content } = await render(app);
+const d = app.data;
+---
+<Page title={d.title} description={d.summary} ogImage={d.screenshots[0]}>
+  <header class="head" style={`--accent: ${d.accent}`}>
+    <img class="icon" src={d.icon} alt="" width="72" height="72" />
+    <div>
+      <h1>{d.title}</h1>
+      <p class="tagline">{d.tagline}</p>
+      <Platforms platforms={d.platform} />
+    </div>
+  </header>
+  <p class="summary">{d.summary}</p>
+  <ul class="links">
+    <li><a class="primary" href={d.links.site}>Visit the {d.title} site</a></li>
+    {d.links.store && <li><a href={d.links.store}>Get it on Google Play</a></li>}
+    <li><a href={d.links.github}>Source on GitHub</a></li>
+  </ul>
+  {d.screenshots.map((s) => (
+    <img class="shot" src={s} alt={`Screens from ${d.title}`} loading="lazy" />
+  ))}
+  <article class="prose"><Content /></article>
+  <Related ids={d.related} />
+</Page>
+
+<style>
+  .head { display: flex; gap: 1.1rem; align-items: center; }
+  .icon { border-radius: 18px; box-shadow: var(--lift); flex: none; }
+  h1 { font-size: var(--step-3); }
+  .tagline { margin: 0.1rem 0 0.5rem; color: var(--muted); }
+  .summary { font-size: var(--step-1); line-height: 1.45; margin: 1.6rem 0 1rem; max-width: 40ch; }
+  .links { display: flex; flex-wrap: wrap; gap: 0.6rem; list-style: none; padding: 0; margin: 0 0 1.6rem; }
+  .links a { display: inline-block; padding: 0.45rem 0.9rem; border-radius: 999px; border: 1px solid var(--mat-major); text-decoration: none; font-size: 0.95rem; }
+  .links a.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .shot { display: block; width: 100%; border-radius: 10px; border: 1px solid var(--paper-edge); margin-bottom: 1rem; }
+</style>

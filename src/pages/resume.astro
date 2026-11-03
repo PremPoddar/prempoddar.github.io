@@ -1,0 +1,106 @@
+---
+import { getCollection } from 'astro:content';
+import Page from '../layouts/Page.astro';
+import { resume } from '../data/resume';
+import { site } from '../data/site';
+import { byOrder } from '../lib/content';
+
+const apps = byOrder(await getCollection('apps'));
+---
+<Page title="Resume" description="Prem Poddar, software developer in Mumbai building for Android, iOS, macOS and the web." wide>
+  <header class="top">
+    <div>
+      <h1>{site.name}</h1>
+      <p class="role">Software developer, building for Android, iOS, macOS and the web</p>
+      <p class="contact">
+        <span>{site.location}</span>
+        <a href={`mailto:${site.email}`}>{site.email}</a>
+        <a href={site.links.github}>GitHub</a>
+        <a href={site.links.linkedin}>LinkedIn</a>
+      </p>
+    </div>
+    <a class="pdf" href="/resume/prem-poddar-resume.pdf" download>Download the PDF</a>
+  </header>
+
+  <p class="intro">{resume.intro}</p>
+
+  <section>
+    <h2>Experience</h2>
+    {resume.experience.map((job) => (
+      <div class="job">
+        <p class="when">{job.when}</p>
+        <div>
+          <h3><a href={job.href}>{job.role}</a></h3>
+          <p class="org">{job.org}</p>
+          <p class="note">{job.note}</p>
+          <ul>{job.points.map((p) => <li>{p}</li>)}</ul>
+        </div>
+      </div>
+    ))}
+  </section>
+
+  <section>
+    <h2>Apps</h2>
+    <ul class="apps">
+      {apps.map((a) => (
+        <li><a href={`/apps/${a.id}/`}>{a.data.title}</a><span>{a.data.tagline}</span></li>
+      ))}
+    </ul>
+  </section>
+
+  <section>
+    <h2>Skills</h2>
+    <dl class="skills">
+      {resume.skills.map(([k, v]) => (<div><dt>{k}</dt><dd>{v}</dd></div>))}
+    </dl>
+  </section>
+
+  <section>
+    <h2>How I work</h2>
+    <ul class="checks">{resume.howIWork.map((p) => <li>{p}</li>)}</ul>
+  </section>
+
+  <section>
+    <h2>Education</h2>
+    <div class="job">
+      <p class="when">{resume.education.year}</p>
+      <div>
+        <h3>{resume.education.degree}</h3>
+        <p class="org">{resume.education.school}</p>
+        <ul>{resume.education.notes.map((n) => <li>{n}</li>)}</ul>
+      </div>
+    </div>
+  </section>
+</Page>
+
+<style>
+  .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap; }
+  h1 { font-size: var(--step-4); font-stretch: 125%; }
+  .role { margin: 0.3rem 0; color: var(--muted); }
+  .contact { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; margin: 0; font-size: var(--step--1); }
+  .pdf { background: var(--ink); color: var(--paper); padding: 0.55rem 1rem; border-radius: 999px; text-decoration: none; white-space: nowrap; }
+  .intro { font-size: var(--step-1); line-height: 1.5; max-width: 60ch; margin: 2rem 0; }
+  section { margin-top: 2.6rem; }
+  h2 { font-size: var(--step-2); margin-bottom: 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--ink); }
+  h3 { font-size: var(--step-1); }
+  h3 a { color: var(--ink); }
+  .job { display: grid; grid-template-columns: 11rem 1fr; gap: 1.4rem; margin-bottom: 1.6rem; }
+  .when { margin: 0.25rem 0 0; color: var(--muted); font-size: var(--step--1); }
+  .org { margin: 0.15rem 0 0; font-weight: 600; }
+  .note { margin: 0.1rem 0 0.5rem; color: var(--muted); font-size: var(--step--1); }
+  .job ul { margin: 0; padding-left: 1.1rem; }
+  .job li { margin-bottom: 0.3rem; }
+  .apps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.6rem 1.4rem; }
+  .apps a { font-weight: 650; margin-right: 0.5rem; }
+  .apps span { color: var(--muted); font-size: var(--step--1); }
+  .skills { margin: 0; display: grid; gap: 0.5rem; }
+  .skills div { display: grid; grid-template-columns: 11rem 1fr; gap: 1.4rem; }
+  dt { font-weight: 650; }
+  dd { margin: 0; }
+  .checks { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5rem; max-width: 64ch; }
+  .checks li { padding-left: 1.6rem; position: relative; }
+  .checks li::before { content: ''; position: absolute; left: 0; top: 0.4em; width: 0.8rem; height: 0.8rem; border: 2px solid var(--pen); border-radius: 3px; background: linear-gradient(135deg, transparent 45%, var(--pen) 45% 60%, transparent 60%); }
+  @media (max-width: 40rem) {
+    .job, .skills div { grid-template-columns: 1fr; gap: 0.2rem; }
+  }
+</style>

@@ -1,0 +1,38 @@
+---
+import Base from './Base.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  wide?: boolean;
+  ogImage?: string;
+}
+const { title, description, wide = false, ogImage } = Astro.props;
+---
+<Base title={title} description={description} ogImage={ogImage}>
+  <a class="skip" href="#main">Skip to content</a>
+  <Nav />
+  <main id="main" class:list={['sheet', { wide }]}>
+    <slot />
+  </main>
+  <Footer />
+</Base>
+
+<style>
+  .sheet {
+    position: relative;
+    max-width: 46rem;
+    margin: 1rem auto 0;
+    background: var(--paper);
+    border: 1px solid var(--paper-edge);
+    border-radius: 6px;
+    box-shadow: var(--lift-high);
+    padding: clamp(1.4rem, 5vw, 3.2rem);
+  }
+  .sheet.wide { max-width: 62rem; }
+  @media (max-width: 48rem) {
+    .sheet { margin: 0.5rem 0.75rem 0; }
+  }
+</style>

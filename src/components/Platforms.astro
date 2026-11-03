@@ -1,0 +1,12 @@
+---
+interface Props { platforms: string[] }
+const names: Record<string, string> = { android: 'Android', ios: 'iOS', macos: 'macOS', web: 'Web' };
+---
+<ul class="platforms">
+  {Astro.props.platforms.map((p) => <li>{names[p] ?? p}</li>)}
+</ul>
+
+<style>
+  .platforms { display: flex; gap: 0.35rem; list-style: none; padding: 0; margin: 0; flex-wrap: wrap; }
+  li { font-size: 0.78rem; padding: 0.1rem 0.55rem; border: 1px solid var(--mat-major); border-radius: 999px; color: var(--muted); }
+</style>

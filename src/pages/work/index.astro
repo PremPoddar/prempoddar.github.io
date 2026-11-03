@@ -1,0 +1,34 @@
+---
+import { getCollection } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+import { byOrder } from '../../lib/content';
+
+const work = byOrder(await getCollection('work'));
+---
+<Page title="Client work" description="Projects I've delivered for clients: native apps, a medical website and a hardware evaluation.">
+  <h1>Client work</h1>
+  <p class="lede">Paid projects, from the first conversation to the handover.</p>
+  <ol class="jobs">
+    {work.map((w) => (
+      <li>
+        <p class="when">{w.data.when}</p>
+        <h2><a href={`/work/${w.id}/`}>{w.data.title}</a></h2>
+        <p class="client">{w.data.client}, {w.data.role.toLowerCase()}</p>
+        <p>{w.data.summary}</p>
+      </li>
+    ))}
+  </ol>
+</Page>
+
+<style>
+  h1 { font-size: var(--step-3); }
+  .lede { color: var(--muted); margin: 0.6rem 0 2rem; }
+  .jobs { list-style: none; padding: 0; margin: 0; display: grid; gap: 2rem; }
+  .jobs li { border-left: 3px solid var(--pen); padding-left: 1.1rem; }
+  .when { margin: 0; color: var(--muted); font-size: var(--step--1); }
+  h2 { font-size: var(--step-1); margin: 0.2rem 0; }
+  h2 a { color: var(--ink); text-decoration: none; }
+  h2 a:hover { color: var(--pen); }
+  .client { margin: 0 0 0.4rem; color: var(--muted); }
+  .jobs p:last-child { margin: 0; }
+</style>

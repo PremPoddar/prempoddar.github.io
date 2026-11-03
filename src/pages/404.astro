@@ -1,0 +1,17 @@
+---
+import Page from '../layouts/Page.astro';
+---
+<Page title="Page not found" description="This page isn't on the desk.">
+  <div class="lost">
+    <p class="code">404</p>
+    <h1>This card fell off the desk</h1>
+    <p>The page you were looking for isn't here. It may have moved, or the link has a typo.</p>
+    <p><a href="/">Back to the workbench</a></p>
+  </div>
+</Page>
+
+<style>
+  .lost { text-align: center; padding: 2rem 0; }
+  .code { font-family: var(--hand); font-size: 5rem; line-height: 1; margin: 0; color: var(--pen); transform: rotate(-4deg); }
+  h1 { font-size: var(--step-2); margin: 1rem 0; }
+</style>

@@ -1,0 +1,47 @@
+---
+import { getCollection } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+import { publishedPosts } from '../../lib/content';
+
+const posts = publishedPosts(await getCollection('writing'), import.meta.env.PROD);
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+---
+<Page title="Writing" description="Posts and guides about the apps I build and the problems I ran into building them.">
+  <h1>Writing</h1>
+  <p class="lede">Posts about things I've built, and guides for the problems I had to figure out along the way.</p>
+  {posts.length === 0 ? (
+    <div class="empty">
+      <p>The first posts are still on the workbench. Meanwhile, the <a href="/toolbox/">toolbox</a> has the tools and sites I'd point you to.</p>
+      <p>Get new posts as they land with the <a href="/rss.xml">RSS feed</a>.</p>
+    </div>
+  ) : (
+    <ul class="posts">
+      {posts.map((p) => (
+        <li>
+          <a href={`/writing/${p.id}/`}>{p.data.title}</a>
+          <p>{p.data.description}</p>
+          <p class="meta">
+            <span>{p.data.kind === 'guide' ? 'Guide' : 'Post'}</span>
+            <time datetime={p.data.date.toISOString()}>{fmt(p.data.date)}</time>
+            {p.data.draft && <span class="draft">Draft</span>}
+          </p>
+        </li>
+      ))}
+    </ul>
+  )}
+</Page>
+
+<style>
+  h1 { font-size: var(--step-3); }
+  .lede { color: var(--muted); margin: 0.6rem 0 2rem; max-width: 52ch; }
+  .empty { padding: 1.2rem 1.4rem; background: var(--note); color: var(--note-ink); border-radius: 4px; transform: rotate(-0.6deg); max-width: 34rem; }
+  .empty p { margin: 0 0 0.5rem; }
+  .empty p:last-child { margin: 0; }
+  .empty a { color: inherit; }
+  .posts { list-style: none; padding: 0; margin: 0; display: grid; gap: 1.6rem; }
+  .posts > li > a { font-weight: 700; font-stretch: 110%; font-size: var(--step-1); color: var(--ink); text-decoration: none; }
+  .posts > li > a:hover { color: var(--pen); }
+  .posts p { margin: 0.2rem 0 0; }
+  .meta { display: flex; gap: 0.8rem; color: var(--muted); font-size: var(--step--1); }
+  .draft { background: var(--note); color: var(--note-ink); padding: 0 0.4rem; border-radius: 3px; }
+</style>

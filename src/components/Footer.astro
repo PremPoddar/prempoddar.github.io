@@ -1,0 +1,20 @@
+---
+import { site } from '../data/site';
+---
+<footer>
+  <p class="line">Want something built? Write to me at <a href={`mailto:${site.email}`}>{site.email}</a>.</p>
+  <ul>
+    <li><a href={site.links.github}>GitHub</a></li>
+    <li><a href={site.links.linkedin}>LinkedIn</a></li>
+    <li><a href={site.links.x}>X</a></li>
+    <li><a href="/rss.xml">RSS</a></li>
+  </ul>
+</footer>
+
+<style>
+  footer { max-width: 62rem; margin: 3rem auto 0; padding: 1.5rem 1rem 3rem; color: var(--muted); font-size: var(--step--1); }
+  .line { margin: 0 0 0.6rem; color: var(--ink); }
+  ul { display: flex; gap: 1.1rem; list-style: none; padding: 0; margin: 0; flex-wrap: wrap; }
+  a { color: inherit; }
+  .line a { color: var(--pen); }
+</style>
