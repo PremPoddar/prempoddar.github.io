@@ -1,6 +1,6 @@
 // Pan, zoom, rulers and strings for the homepage workbench. Only runs on wide screens;
 // phones get the plain stack of cards.
-import { fitView, pan, zoomAt, wheelToZoomFactor, type View, type Rect } from '../lib/canvas/viewport';
+import { fitView, pan, zoomAt, wheelToZoomFactor, revealPan, keyToAction, type View, type Rect } from '../lib/canvas/viewport';
 import { stringPath } from '../lib/canvas/strings';
 
 const UNIT = 24; // desk units per centimetre on the rulers
@@ -189,15 +189,44 @@ function enable(root: HTMLElement): () => void {
 
   function onKey(e: KeyboardEvent) {
     if (isControl(e.target) && e.target !== viewport) return;
-    const moves: Record<string, [number, number]> = {
-      ArrowLeft: [KEY_STEP, 0], ArrowRight: [-KEY_STEP, 0], ArrowUp: [0, KEY_STEP], ArrowDown: [0, -KEY_STEP],
-    };
-    if (moves[e.key]) set(pan(view, ...moves[e.key]), true);
-    else if (e.key === '+' || e.key === '=') zoomCentre(1.25);
-    else if (e.key === '-' || e.key === '_') zoomCentre(0.8);
-    else if (e.key === '0') set(home(), true);
-    else return;
+    const action = keyToAction(e, KEY_STEP);
+    if (!action) return;
+    if ('pan' in action) set(pan(view, ...action.pan), true);
+    else if ('zoom' in action) zoomCentre(action.zoom);
+    else set(home(), true);
     e.preventDefault();
+  }
+
+  // Keyboard focus can land on a card anywhere on the desk. Once the browser has done any
+  // scrolling of its own (handled by onScroll), pan so the whole card is on screen.
+  function onFocusIn(e: FocusEvent) {
+    const card = (e.target as Element).closest<HTMLElement>('[data-card]');
+    if (!card) return;
+    window.setTimeout(() => {
+      onScroll();
+      const v = viewport.getBoundingClientRect();
+      const c = card.getBoundingClientRect();
+      const { dx, dy } = revealPan(
+        { x: c.left, y: c.top, w: c.width, h: c.height },
+        { x: v.left, y: v.top + 24, w: v.width, h: v.height - 24 },
+        48,
+      );
+      if (dx || dy) set(pan(view, dx, dy), true);
+    }, 0);
+  }
+
+  // Safari sends pinches as gesture events rather than Ctrl+wheel.
+  let gestureScale = 1;
+  function onGestureStart(e: Event) {
+    e.preventDefault();
+    gestureScale = 1;
+  }
+  function onGestureChange(e: Event) {
+    e.preventDefault();
+    const g = e as Event & { scale: number; clientX: number; clientY: number };
+    const r = viewport.getBoundingClientRect();
+    set(zoomAt(view, g.scale / gestureScale, g.clientX - r.left, g.clientY - r.top));
+    gestureScale = g.scale;
   }
 
   // Tabbing to an off-screen card makes the browser scroll the clipped viewport.
@@ -224,6 +253,9 @@ function enable(root: HTMLElement): () => void {
   viewport.addEventListener('wheel', onWheel, { passive: false });
   viewport.addEventListener('keydown', onKey);
   viewport.addEventListener('scroll', onScroll);
+  viewport.addEventListener('focusin', onFocusIn);
+  viewport.addEventListener('gesturestart', onGestureStart);
+  viewport.addEventListener('gesturechange', onGestureChange);
   zoomButtons.forEach((b) => b.addEventListener('click', onZoomButton));
   tidy.addEventListener('click', onTidy);
   window.addEventListener('resize', onResize);
@@ -243,6 +275,9 @@ function enable(root: HTMLElement): () => void {
     viewport.removeEventListener('wheel', onWheel);
     viewport.removeEventListener('keydown', onKey);
     viewport.removeEventListener('scroll', onScroll);
+    viewport.removeEventListener('focusin', onFocusIn);
+    viewport.removeEventListener('gesturestart', onGestureStart);
+    viewport.removeEventListener('gesturechange', onGestureChange);
     zoomButtons.forEach((b) => b.removeEventListener('click', onZoomButton));
     tidy.removeEventListener('click', onTidy);
     window.removeEventListener('resize', onResize);

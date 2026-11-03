@@ -12,7 +12,7 @@
     <button type="button" data-play aria-pressed="false">Play on all three</button>
     <button type="button" data-knock disabled>Knock one out of sync</button>
   </div>
-  <p class="status" aria-live="polite" data-status>Three phones, one song. Press play.</p>
+  <p class="status"><span aria-live="polite" data-status>Three phones, one song. Press play.</span> <span data-drift></span></p>
 </div>
 
 <script>
@@ -26,6 +26,11 @@
     const play = root.querySelector<HTMLButtonElement>('[data-play]')!;
     const knock = root.querySelector<HTMLButtonElement>('[data-knock]')!;
     const status = root.querySelector<HTMLElement>('[data-status]')!;
+    const drift = root.querySelector<HTMLElement>('[data-drift]')!;
+    // Only announce changes of state; the millisecond count lives outside the live region.
+    const say = (text: string) => {
+      if (status.textContent !== text) status.textContent = text;
+    };
     const offsets = [0, 0, 0];
     let playing = false;
     let songTime = 0;
@@ -48,8 +53,13 @@
         p.querySelector<HTMLElement>('[data-beat]')!.classList.toggle('on', t % BEAT < 0.12);
         p.style.setProperty('--spin', `${t * 120}deg`);
       });
-      if (worst > 0) status.textContent = `One phone is ${Math.round(worst * 1000)} ms off. Easing it back without a jump.`;
-      else if (playing) status.textContent = 'In sync. Watch the beat lights.';
+      if (worst > 0) {
+        say('One phone is out of sync. Easing it back without a jump.');
+        drift.textContent = `${Math.round(worst * 1000)} ms off`;
+      } else if (playing) {
+        say('In sync. Watch the beat lights.');
+        drift.textContent = '';
+      }
       if (playing) frame = requestAnimationFrame(tick);
     };
 
@@ -63,7 +73,8 @@
         frame = requestAnimationFrame(tick);
       } else {
         cancelAnimationFrame(frame);
-        status.textContent = 'Paused on every phone at once.';
+        say('Paused on every phone at once.');
+        drift.textContent = '';
       }
     });
 
@@ -92,4 +103,5 @@
   button[aria-pressed='true'] { background: #c8553d; border-color: #c8553d; color: #fff; }
   button:disabled { opacity: 0.45; cursor: default; }
   .status { margin: 0.4rem 0 0; font-size: 0.8rem; color: var(--muted); line-height: 1.35; min-height: 2.2em; }
+  [data-drift] { color: #c8553d; font-variant-numeric: tabular-nums; }
 </style>

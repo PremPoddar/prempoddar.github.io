@@ -11,7 +11,7 @@ related: []
 
 ## The brief
 
-Pablo needed to send data underwater, and commercial acoustic communication systems vary a lot in range, reliability and price. The question wasn't "which one is best on paper". It was "which one will actually work in our conditions, at a cost that makes sense".
+Pablo needed to send data underwater, and commercial acoustic communication systems vary a lot in range, reliability and price. The real question was which one would work in their conditions, at a cost that made sense, rather than which looked best on paper.
 
 ## What I did
 
@@ -21,4 +21,4 @@ Pablo needed to send data underwater, and commercial acoustic communication syst
 
 ## How it went
 
-This was as much a purchasing decision as a technical one. The most useful thing I delivered wasn't a test result, it was a clear recommendation the client could act on, with the costs and trade-offs laid out.
+This was as much a purchasing decision as a technical one, so the comparison put cost next to range and reliability for each system.

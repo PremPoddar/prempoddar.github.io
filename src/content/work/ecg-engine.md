@@ -13,7 +13,7 @@ related: [ejercicioysalud]
 
 A medical education company wanted an app that teaches people to read ECGs, on both iPhone and Android. The heart of it is the ECG itself: it has to be generated, not just played back from images, and it has to look and behave the same on both platforms.
 
-I worked directly with the two founders, Marco Cebrián Muiño and Francisco Javier Miana, as an independent contractor.
+I worked as an independent contractor for Marco Cebrián Muiño and Francisco Javier Miana, remotely from Mumbai.
 
 ## What I did
 
@@ -21,7 +21,3 @@ I worked directly with the two founders, Marco Cebrián Muiño and Francisco Jav
 - **Real native apps around it.** The apps themselves are native: Swift on iOS and Kotlin on Android. They cover three modules, Simulate, Practice and Learn.
 - **Two languages.** The apps are in English and Spanish and pick the right one from the device language.
 - **Getting it out the door.** I prepared the App Store and Google Play publication assets and built the product's landing site.
-
-## How it went
-
-The work covered the whole path, from the engine itself to the native apps, the translations, the store listings and the landing page.

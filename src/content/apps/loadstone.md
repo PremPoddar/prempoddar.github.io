@@ -25,7 +25,7 @@ Drop a pin and walk back to it later with one arrow and one distance. No map til
 
 ## The hard parts
 
-**Being honest about accuracy.** A GPS fix isn't a point, it's a point plus a radius. Loadstone runs fixes through a Kalman filter in a local east/north frame, so each pin is a position and an honest radius. It refuses to claim better than GPS can actually give. When you stand at the spot again later, you can "sharpen" the pin, because a second visit is wrong in a different direction and the two together land closer.
+**Being honest about accuracy.** Every GPS fix comes with an accuracy radius, and that radius matters as much as the point. Loadstone runs fixes through a Kalman filter in a local east/north frame, so each pin is a position and an honest radius. It refuses to claim better than GPS can actually give. When you stand at the spot again later, you can "sharpen" the pin, because a second visit is wrong in a different direction and the two together land closer.
 
 **A steady arrow.** One fixed smoothing strength is either jittery or laggy. The arrow uses a dead band for tiny sensor noise and opens up as you turn, so it's still when you're still and quick when you move. Once you're closer than the uncertainty, it stops pointing and tells you so.
 

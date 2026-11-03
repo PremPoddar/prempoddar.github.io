@@ -36,3 +36,30 @@ export function fitView(bounds: Rect, vw: number, vh: number, padding: number): 
     scale,
   };
 }
+
+// How far to pan so `card` (screen rect) sits inside `viewport` with `margin` to spare.
+export function revealPan(card: Rect, viewport: Rect, margin: number): { dx: number; dy: number } {
+  const axis = (start: number, size: number, vStart: number, vSize: number) => {
+    if (start < vStart + margin) return vStart + margin - start;
+    if (start + size > vStart + vSize - margin) return Math.max(vStart + margin - start, vStart + vSize - margin - (start + size));
+    return 0;
+  };
+  return { dx: axis(card.x, card.w, viewport.x, viewport.w), dy: axis(card.y, card.h, viewport.y, viewport.h) };
+}
+
+export type KeyAction = { pan: [number, number] } | { zoom: number } | { home: true } | null;
+
+// Desk keys. Anything with a modifier is left to the browser (Ctrl or Cmd with + zooms the page, for example).
+export function keyToAction(e: { key: string; ctrlKey: boolean; metaKey: boolean; altKey: boolean }, step = 80): KeyAction {
+  if (e.ctrlKey || e.metaKey || e.altKey) return null;
+  switch (e.key) {
+    case 'ArrowLeft': return { pan: [step, 0] };
+    case 'ArrowRight': return { pan: [-step, 0] };
+    case 'ArrowUp': return { pan: [0, step] };
+    case 'ArrowDown': return { pan: [0, -step] };
+    case '+': case '=': return { zoom: 1.25 };
+    case '-': case '_': return { zoom: 0.8 };
+    case '0': return { home: true };
+    default: return null;
+  }
+}

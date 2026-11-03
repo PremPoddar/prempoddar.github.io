@@ -28,4 +28,4 @@ The first mode is easy. The second one isn't. On Apple Silicon, the only reliabl
 
 So the app installs a tightly scoped sudoers rule that allows exactly those two `pmset` commands and nothing else, after one admin prompt. Then it goes out of its way never to leave sleep disabled: it restores it on quit and on signals, a watchdog process restores it even after a crash or `kill -9`, and on the next launch it checks whether something went wrong and fixes it.
 
-It's open source under Apache 2.0, and I wrote about the lid-closed part in more detail.
+It's open source under Apache 2.0.

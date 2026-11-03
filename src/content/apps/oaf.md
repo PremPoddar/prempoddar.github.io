@@ -29,5 +29,3 @@ OAF opens PDFs, Word, Excel, slides, e-books, archives, pictures, music and vide
 **Saving without breaking things.** A Word file has a lot OAF doesn't model. So each paragraph remembers the XML it came from, and only the ones you changed get rebuilt. Everything else is carried over untouched. Spreadsheets work the same way, and there's a formula engine with about a hundred functions behind them.
 
 **Proving it.** There are more than 200 unit tests, covering type detection, the formula engine function by function, and DOCX and XLSX round trips that check only the edited parts changed.
-
-I wrote up how the format detection and patch saving work in a separate post.

@@ -11,6 +11,7 @@ export function lintCopy(text) {
     if (new RegExp(`\\b${w}\\b`, 'i').test(text)) issues.push(`word: ${w}`);
   }
   if (/\bnot just\b[^.!?]{0,60}\bbut\b/i.test(text)) issues.push('"not just X, but Y"');
+  if (/\b(wasn't|isn't|wasn’t|isn’t)\b[^.!?\n]{0,80}[,.] (it was|it's|it is)\b/i.test(text)) issues.push('"wasn\'t X, it was Y"');
   if (/98674\D{0,3}70257|9867470257/.test(text)) issues.push('phone number');
   if (/yandex/i.test(text)) issues.push('yandex');
   return issues;

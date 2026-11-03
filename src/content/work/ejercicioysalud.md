@@ -16,7 +16,7 @@ The Official College of Physicians of Zaragoza needed a public platform for clin
 
 ## What I did
 
-- **Planned the structure first.** I set up the site architecture and content model around multilingual educational material, clinical guides and embedded video training modules, so doctors could add to it later without fighting the layout.
+- **Planned the structure first.** I set up the site architecture and content model around multilingual educational material, clinical guides and embedded video training modules.
 - **Built the front end.** Responsive and accessible, to the college's standards.
 - **Handed it over properly.** I delivered it production ready and left a codebase the college can maintain on its own.
 
