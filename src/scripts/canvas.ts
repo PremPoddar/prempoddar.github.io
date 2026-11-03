@@ -1,13 +1,13 @@
 // Pan, zoom, rulers and strings for the homepage workbench. Only runs on wide screens;
 // phones get the plain stack of cards.
-import { fitView, fitScale, clampView, pan, zoomAt, wheelToZoomFactor, revealPan, keyToAction, MAX_SCALE, type View, type Rect } from '../lib/canvas/viewport';
+import { homeView, fitScale, clampView, pan, zoomAt, wheelToZoomFactor, revealPan, keyToAction, MAX_SCALE, type View, type Rect } from '../lib/canvas/viewport';
 import { deskBounds } from '../data/canvas';
 import { stringPath } from '../lib/canvas/strings';
 
 const UNIT = 24; // desk units per centimetre on the rulers
 const MAJOR = UNIT * 5;
 const KEY_STEP = 80;
-const EDGE = 120; // how far the desk's edge may come in from the screen edge
+const KEEP = 200; // the desk can be dragged until only this many pixels of it are left on screen
 
 export function initWorkbench() {
   const root = document.querySelector<HTMLElement>('[data-workbench]');
@@ -41,7 +41,7 @@ function enable(root: HTMLElement): () => void {
 
   function home(): View {
     const r = viewport.getBoundingClientRect();
-    return fitView(start, r.width, r.height, 48);
+    return homeView(start, r.width, r.height, 48);
   }
 
   function size() {
@@ -80,7 +80,7 @@ function enable(root: HTMLElement): () => void {
       window.setTimeout(() => world.classList.remove('easing'), 450);
     }
     const { w, h } = size();
-    view = clampView(next, deskBounds, w, h, EDGE);
+    view = clampView(next, deskBounds, w, h, KEEP);
     if (!frame) frame = requestAnimationFrame(render);
   }
 

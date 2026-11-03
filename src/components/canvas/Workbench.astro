@@ -81,6 +81,14 @@ function app(id: string): CollectionEntry<'apps'> {
 
       {notes.filter((n) => n.id === 'note-help').map((n) => <StickyNote {...n} />)}
 
+      <h2 class="stack-heading">About</h2>
+      <Card {...at('about')} kind="about" zone="about" label="About">
+        <h3>About me</h3>
+        <p>I'm finishing a BSc in Computer Science at Mithibai College in Mumbai, graduating in 2027 with a CGPA of 8.62 so far. I also took part in the Smart India Hackathon.</p>
+        <p>Most days that means Kotlin, Swift, C++ or JavaScript. Some days it's circuits and a test plan for hardware. I speak English, Spanish and Hindi.</p>
+        <p class="actions"><a href="/resume/">Resume</a><a href="/work/">Client work</a><a href="/apps/">All apps</a></p>
+      </Card>
+
       <h2 class="stack-heading">Apps</h2>
       {deskApps.map((a) => (
         <Card {...at(a.id)} kind={a.id === 'brewlight' ? 'app card-dark' : 'app'} zone="apps" label={a.data.title} accent={a.data.accent}>
@@ -139,15 +147,7 @@ function app(id: string): CollectionEntry<'apps'> {
           </Card>
         );
       })}
-      {notes.filter((n) => n.id === 'note-work').map((n) => <StickyNote {...n} />)}
 
-      <h2 class="stack-heading">About</h2>
-      <Card {...at('about')} kind="about" zone="about" label="About">
-        <h3>About me</h3>
-        <p>I'm finishing a BSc in Computer Science at Mithibai College in Mumbai, graduating in 2027 with a CGPA of 8.62 so far. I also took part in the Smart India Hackathon.</p>
-        <p>Most days that means Kotlin, Swift, C++ or JavaScript. Some days it's circuits and a test plan for hardware. I speak English, Spanish and Hindi.</p>
-        <p class="actions"><a href="/resume/">Resume</a><a href="/work/">Client work</a><a href="/apps/">All apps</a></p>
-      </Card>
     </div>
   </div>
 

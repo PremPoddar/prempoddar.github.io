@@ -69,14 +69,19 @@ export function fitScale(desk: Rect, vw: number, vh: number, padding: number): n
   return Math.min(1, Math.max(0.2, Math.min((vw - 2 * padding) / desk.w, (vh - 2 * padding) / desk.h)));
 }
 
-// Keep the desk on screen. When the desk is bigger than the screen on an axis, its edges can come
-// in at most `pad` pixels from the screen edge; when it's smaller, it stays centred on that axis.
-export function clampView(view: View, desk: Rect, vw: number, vh: number, pad: number): View {
+// Let the desk move freely, but always leave at least `keep` pixels of it on screen.
+export function clampView(view: View, desk: Rect, vw: number, vh: number, keep: number): View {
   const axis = (pos: number, start: number, size: number, screen: number) => {
-    const s = size * view.scale;
-    const offset = start * view.scale;
-    if (s + 2 * pad <= screen) return (screen - s) / 2 - offset;
-    return Math.min(pad - offset, Math.max(screen - pad - offset - s, pos));
+    const lo = keep - (start + size) * view.scale;
+    const hi = screen - keep - start * view.scale;
+    return Math.min(hi, Math.max(lo, pos));
   };
   return { x: axis(view.x, desk.x, desk.w, vw), y: axis(view.y, desk.y, desk.h, vh), scale: view.scale };
+}
+
+// The opening view: 100% zoom, the opening area centred if it fits, otherwise starting from its top left.
+export function homeView(start: Rect, vw: number, vh: number, pad: number): View {
+  const axis = (from: number, size: number, screen: number) =>
+    size + 2 * pad <= screen ? (screen - size) / 2 - from : pad - from;
+  return { x: axis(start.x, start.w, vw), y: axis(start.y, start.h, vh), scale: 1 };
 }
