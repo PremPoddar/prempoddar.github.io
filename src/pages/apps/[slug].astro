@@ -37,7 +37,8 @@ const d = app.data;
 </Page>
 
 <style>
-  .head { display: flex; gap: 1.1rem; align-items: center; }
+  .head { display: flex; flex-wrap: wrap; gap: 0.6rem 1.1rem; align-items: center; }
+  .head > div { min-width: 0; }
   .icon { border-radius: 18px; box-shadow: var(--lift); flex: none; }
   h1 { font-size: var(--step-3); }
   .tagline { margin: 0.1rem 0 0.5rem; color: var(--muted); }

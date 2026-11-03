@@ -5,7 +5,7 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
 
 body {
   margin: 0;
@@ -30,12 +30,18 @@ h1, h2, h3 {
   letter-spacing: -0.01em;
   margin: 0;
   text-wrap: balance;
+  overflow-wrap: break-word;
 }
 
 a { color: var(--pen); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
 a:hover { text-decoration-thickness: 2px; }
 
 :focus-visible { outline: 2px solid var(--pen); outline-offset: 3px; border-radius: 4px; }
+
+/* No grey or blue flash on tap; a light press state instead. */
+@media (hover: none) {
+  a:active, button:active { opacity: 0.7; }
+}
 
 code, pre { font-family: var(--mono); font-size: 0.88em; }
 :not(pre) > code { background: var(--pen-soft); padding: 0.1em 0.35em; border-radius: 4px; }

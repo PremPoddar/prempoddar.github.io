@@ -83,7 +83,7 @@ const host = (url: string) => new URL(url).host.replace(/^www\./, '');
   section { margin-top: 2rem; }
   section[hidden] { display: none; }
   h2 { font-size: var(--step-1); margin-bottom: 0.8rem; }
-  .tools { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 0.8rem; }
+  .tools { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr)); gap: 0.8rem; }
   .tools > li { display: flex; gap: 0.9rem; align-items: flex-start; padding: 0.9rem 1rem; border: 1px solid var(--paper-edge); border-radius: 12px; background: #fff; }
   .tools > li[hidden] { display: none; }
   .tools img, .letter { width: 32px; height: 32px; border-radius: 8px; flex: none; }

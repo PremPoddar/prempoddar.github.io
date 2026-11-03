@@ -33,4 +33,16 @@ const path = Astro.url.pathname;
   }
   nav a:hover { background: var(--paper); }
   nav a[aria-current='page'] { background: var(--ink); color: var(--paper); }
+
+  /* Phones: name on its own line, all six links on one row underneath. On the narrowest
+     phones the row scrolls sideways instead of wrapping. */
+  @media (max-width: 40rem) {
+    .topbar { flex-direction: column; align-items: stretch; gap: 0.6rem; padding: 0.9rem 1rem 0.6rem; }
+    nav { min-width: 0; overflow-x: auto; scrollbar-width: none; margin: 0 -0.25rem; }
+    nav::-webkit-scrollbar { display: none; }
+    ul { flex-wrap: nowrap; justify-content: space-between; gap: 0; }
+    nav a { padding: 0.45rem clamp(0.3rem, 1.6vw, 0.6rem); font-size: clamp(0.8rem, 3.6vw, 0.9rem); white-space: nowrap; }
+    nav a:hover { background: transparent; }
+    nav a[aria-current='page']:hover { background: var(--ink); }
+  }
 </style>

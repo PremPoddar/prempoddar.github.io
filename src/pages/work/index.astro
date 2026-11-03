@@ -98,7 +98,7 @@ const mailto = `mailto:${site.email}?subject=${encodeURIComponent('A project for
   .cta a.primary:hover { background: var(--note); border-color: var(--note); }
 
   @media (max-width: 52rem) {
-    .job { grid-template-columns: 1fr; }
+    .job { grid-template-columns: minmax(0, 1fr); }
     .job:nth-child(even) > :first-child { order: 0; }
     .body { padding: 1.4rem; }
   }
