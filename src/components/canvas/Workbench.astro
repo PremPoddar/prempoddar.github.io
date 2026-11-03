@@ -11,7 +11,7 @@ import BrewlightCard from './cards/BrewlightCard.astro';
 import DuetCard from './cards/DuetCard.astro';
 import { zones, items, notes, links, startBounds } from '../../data/canvas';
 import { site } from '../../data/site';
-import { publishedPosts } from '../../lib/content';
+import { publishedPosts, byOrder } from '../../lib/content';
 import { resolveStrings } from '../../lib/canvas/strings';
 
 const apps = new Map((await getCollection('apps')).map((a) => [a.id, a]));
@@ -31,8 +31,8 @@ const writingId = latest ? latest.id : 'writing';
 const onDesk = new Set<string>([...items.map((i) => (i.id === 'writing' ? writingId : i.id)), ...notes.map((n) => n.id)]);
 const strings = resolveStrings(links, onDesk);
 
-const appOrder = ['librechat', 'duet', 'loadstone', 'oaf', 'campfire'];
-const macOrder = ['brewlight', 'caffeinatecat'];
+// Apps appear on the desk (and in the phone stack) in order of importance, if they have a spot in canvas.ts.
+const deskApps = byOrder([...apps.values()]).filter((a) => items.some((i) => i.id === a.id));
 const workOrder = ['ecg-engine', 'ejercicioysalud', 'underwater-acoustics'];
 const demos: Record<string, any> = { loadstone: LoadstoneCard, caffeinatecat: CaffeinateCard, brewlight: BrewlightCard, duet: DuetCard };
 const mailto = `mailto:${site.email}?subject=${encodeURIComponent('A project for you')}`;
@@ -81,45 +81,22 @@ function app(id: string): CollectionEntry<'apps'> {
 
       {notes.filter((n) => n.id === 'note-help').map((n) => <StickyNote {...n} />)}
 
-      <h2 class="stack-heading">Phone apps</h2>
-      {appOrder.map((id) => {
-        const a = app(id);
-        return (
-          <Card {...at(id)} kind="app" zone="apps" label={a.data.title} accent={a.data.accent}>
-            <div class="app-head">
-              <img src={a.data.icon} alt="" width="44" height="44" loading="lazy" />
-              <div>
-                <h3><a href={a.data.links.site}>{a.data.title}</a></h3>
-                <p class="tag">{a.data.tagline}</p>
-              </div>
+      <h2 class="stack-heading">Apps</h2>
+      {deskApps.map((a) => (
+        <Card {...at(a.id)} kind={a.id === 'brewlight' ? 'app card-dark' : 'app'} zone="apps" label={a.data.title} accent={a.data.accent}>
+          <div class="app-head">
+            <img src={a.data.icon} alt="" width="44" height="44" loading="lazy" />
+            <div>
+              <h3><a href={a.data.links.site}>{a.data.title}</a></h3>
+              <p class="tag">{a.data.tagline}</p>
             </div>
-            <p class="sum">{a.data.summary}</p>
-            {demos[id] && (() => { const Demo = demos[id]; return <Demo />; })()}
-            <Platforms platforms={a.data.platform} />
-          </Card>
-        );
-      })}
-      {notes.filter((n) => n.id === 'note-offline').map((n) => <StickyNote {...n} />)}
-
-      <h2 class="stack-heading">Mac apps</h2>
-      {macOrder.map((id) => {
-        const a = app(id);
-        return (
-          <Card {...at(id)} kind={id === 'brewlight' ? 'app card-dark' : 'app'} zone="mac" label={a.data.title} accent={a.data.accent}>
-            <div class="app-head">
-              <img src={a.data.icon} alt="" width="44" height="44" loading="lazy" />
-              <div>
-                <h3><a href={a.data.links.site}>{a.data.title}</a></h3>
-                <p class="tag">{a.data.tagline}</p>
-              </div>
-            </div>
-            <p class="sum">{a.data.summary}</p>
-            {demos[id] && (() => { const Demo = demos[id]; return <Demo />; })()}
-            <Platforms platforms={a.data.platform} />
-          </Card>
-        );
-      })}
-      {notes.filter((n) => n.id === 'note-caffeinate').map((n) => <StickyNote {...n} />)}
+          </div>
+          <p class="sum">{a.data.summary}</p>
+          {demos[a.id] && (() => { const Demo = demos[a.id]; return <Demo />; })()}
+          <Platforms platforms={a.data.platform} />
+        </Card>
+      ))}
+      {notes.filter((n) => n.id === 'note-caffeinate' || n.id === 'note-offline').map((n) => <StickyNote {...n} />)}
 
       <h2 class="stack-heading">Writing</h2>
       <Card {...at('writing')} id={writingId} kind="writing" zone="writing" label="Writing">
