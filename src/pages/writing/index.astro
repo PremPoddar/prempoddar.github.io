@@ -2,46 +2,153 @@
 import { getCollection } from 'astro:content';
 import Page from '../../layouts/Page.astro';
 import { publishedPosts } from '../../lib/content';
+import { appFor, readingMinutes } from '../../lib/posts';
 
-const posts = publishedPosts(await getCollection('writing'), import.meta.env.PROD);
+const apps = await getCollection('apps');
+const posts = publishedPosts(await getCollection('writing'), import.meta.env.PROD).map((p) => {
+  const app = appFor(p, apps);
+  return {
+    p,
+    app,
+    minutes: readingMinutes(p.body ?? ''),
+    platforms: app?.data.platform.map((x) => (x === 'macos' ? 'mac' : x)) ?? [],
+  };
+});
+const [lead, ...rest] = posts;
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const filters = [
+  { id: 'all', label: 'Everything' },
+  { id: 'android', label: 'Android' },
+  { id: 'mac', label: 'Mac' },
+];
 ---
-<Page title="Writing" description="Posts and guides about the apps I build and the problems I ran into building them.">
-  <h1>Writing</h1>
-  <p class="lede">Posts about things I've built, and guides for the problems I had to figure out along the way.</p>
-  {posts.length === 0 ? (
-    <div class="empty">
-      <p>The first posts are still on the workbench. Meanwhile, the <a href="/toolbox/">toolbox</a> has the tools and sites I'd point you to.</p>
-      <p>Get new posts as they land with the <a href="/rss.xml">RSS feed</a>.</p>
+<Page title="Writing" description="How my apps work inside: the problems, the code and the parts that were hard to get right." full>
+  <header class="intro">
+    <h1>Writing</h1>
+    <p class="lede">How my apps work on the inside. Each post takes one app apart: the problem it solves, the code that does the hard part, and where it still falls short.</p>
+    <div class="tools">
+      <div class="filters" role="group" aria-label="Show posts about">
+        {filters.map((f, i) => <button type="button" data-filter={f.id} aria-pressed={i === 0 ? 'true' : 'false'}>{f.label}</button>)}
+      </div>
+      <a class="rss" href="/rss.xml">Follow with RSS</a>
     </div>
+  </header>
+
+  {!lead ? (
+    <p class="empty">The first posts are still on the workbench. Meanwhile, the <a href="/toolbox/">toolbox</a> has the tools and sites I'd point you to.</p>
   ) : (
-    <ul class="posts">
-      {posts.map((p) => (
-        <li>
-          <a href={`/writing/${p.id}/`}>{p.data.title}</a>
-          <p>{p.data.description}</p>
-          <p class="meta">
-            <span>{p.data.kind === 'guide' ? 'Guide' : 'Post'}</span>
-            <time datetime={p.data.date.toISOString()}>{fmt(p.data.date)}</time>
-            {p.data.draft && <span class="draft">Draft</span>}
-          </p>
-        </li>
-      ))}
-    </ul>
+    <>
+      <article class="lead post" data-platforms={lead.platforms.join(' ')} style={`--accent: ${lead.app?.data.accent ?? 'var(--pen)'}`}>
+        {lead.app && <img class="cover" src={lead.app.data.screenshots[0] ?? `/apps/${lead.app.id}/banner.jpg`} alt="" loading="eager" />}
+        <div class="text">
+          {lead.app && (
+            <p class="app"><img src={lead.app.data.icon} alt="" width="28" height="28" />{lead.app.data.title}</p>
+          )}
+          <h2><a href={`/writing/${lead.p.id}/`}>{lead.p.data.title}</a></h2>
+          <p class="desc">{lead.p.data.description}</p>
+          <p class="meta"><time datetime={lead.p.data.date.toISOString()}>{fmt(lead.p.data.date)}</time><span>{lead.minutes} min read</span></p>
+        </div>
+      </article>
+
+      <ol class="grid">
+        {rest.map(({ p, app, minutes, platforms }) => (
+          <li class="post" data-platforms={platforms.join(' ')} style={`--accent: ${app?.data.accent ?? 'var(--pen)'}`}>
+            <p class="tab">{app && <img src={app.data.icon} alt="" width="20" height="20" />}{app?.data.title ?? (p.data.kind === 'guide' ? 'Guide' : 'Post')}</p>
+            <div class="sheet">
+              {app && <img class="thumb" src={app.data.screenshots[0] ?? `/apps/${app.id}/banner.jpg`} alt="" loading="lazy" />}
+              <h2><a href={`/writing/${p.id}/`}>{p.data.title}</a></h2>
+              <p class="desc">{p.data.description}</p>
+              <p class="meta"><time datetime={p.data.date.toISOString()}>{fmt(p.data.date)}</time><span>{minutes} min read</span></p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <p class="none" hidden>No posts here yet.</p>
+    </>
   )}
 </Page>
 
+<script>
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('.filters button')];
+  const posts = [...document.querySelectorAll<HTMLElement>('.post')];
+  const none = document.querySelector<HTMLElement>('.none');
+  for (const b of buttons) {
+    b.addEventListener('click', () => {
+      const f = b.dataset.filter!;
+      for (const x of buttons) x.setAttribute('aria-pressed', String(x === b));
+      let shown = 0;
+      for (const p of posts) {
+        const show = f === 'all' || (p.dataset.platforms ?? '').split(' ').includes(f);
+        p.hidden = !show;
+        if (show) shown++;
+      }
+      if (none) none.hidden = shown > 0;
+    });
+  }
+</script>
+
 <style>
-  h1 { font-size: var(--step-3); }
-  .lede { color: var(--muted); margin: 0.6rem 0 2rem; max-width: 52ch; }
-  .empty { padding: 1.2rem 1.4rem; background: var(--note); color: var(--note-ink); border-radius: 4px; transform: rotate(-0.6deg); max-width: 34rem; }
-  .empty p { margin: 0 0 0.5rem; }
-  .empty p:last-child { margin: 0; }
-  .empty a { color: inherit; }
-  .posts { list-style: none; padding: 0; margin: 0; display: grid; gap: 1.6rem; }
-  .posts > li > a { font-weight: 700; font-stretch: 110%; font-size: var(--step-1); color: var(--ink); text-decoration: none; }
-  .posts > li > a:hover { color: var(--pen); }
-  .posts p { margin: 0.2rem 0 0; }
-  .meta { display: flex; gap: 0.8rem; color: var(--muted); font-size: var(--step--1); }
-  .draft { background: var(--note); color: var(--note-ink); padding: 0 0.4rem; border-radius: 3px; }
+  .intro { max-width: 48rem; margin: 1rem 0 2.2rem; }
+  h1 { font-size: var(--step-4); font-stretch: 125%; font-weight: 800; line-height: 0.95; }
+  .lede { font-size: var(--step-1); line-height: 1.45; color: var(--muted); margin: 1rem 0 1.4rem; max-width: 44ch; }
+  .tools { display: flex; flex-wrap: wrap; gap: 0.8rem 1.2rem; align-items: center; }
+  .filters { display: inline-flex; padding: 0.25rem; gap: 0.2rem; background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 999px; }
+  .filters button {
+    font: inherit; font-size: 0.92rem; border: 0; background: transparent; color: var(--ink);
+    padding: 0.35rem 0.9rem; border-radius: 999px; cursor: pointer;
+  }
+  .filters button[aria-pressed='true'] { background: var(--ink); color: var(--paper); }
+  .rss {
+    font-family: var(--hand); font-size: 1.35rem; color: var(--note-ink); text-decoration: none;
+    background: var(--note); padding: 0.1rem 0.8rem 0.2rem; transform: rotate(-2deg); box-shadow: var(--lift);
+  }
+  .rss:hover { transform: rotate(0deg); }
+
+  .post h2 a { color: var(--ink); text-decoration: none; }
+  .post h2 a::after { content: ''; position: absolute; inset: 0; z-index: 1; }
+  .post h2 a:focus-visible { outline: none; }
+  .post:focus-within { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .desc { margin: 0; line-height: 1.5; color: var(--muted); }
+  .meta { display: flex; gap: 1rem; margin: 0; font-size: var(--step--1); color: var(--muted); }
+  .meta span::before { content: ''; display: inline-block; width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--accent); margin-right: 0.45rem; vertical-align: 0.08em; }
+
+  .lead {
+    position: relative; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 14px; overflow: hidden;
+    box-shadow: var(--lift-high); margin-bottom: 2.6rem; border-top: 6px solid var(--accent);
+  }
+  .lead .cover { width: 100%; height: 100%; min-height: 18rem; object-fit: cover; display: block; background: color-mix(in srgb, var(--accent) 20%, #101411); }
+  .lead .text { padding: clamp(1.4rem, 4vw, 2.6rem); display: grid; gap: 0.9rem; align-content: center; }
+  .app { display: flex; align-items: center; gap: 0.55rem; margin: 0; font-weight: 650; font-size: 0.95rem; }
+  .app img { border-radius: 8px; }
+  .lead h2 { font-size: var(--step-3); font-stretch: 112%; line-height: 1.05; }
+  .lead .desc { font-size: 1.08rem; }
+
+  .grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr)); gap: 2.4rem 1.6rem; }
+  .grid .post { position: relative; display: grid; grid-template-rows: auto 1fr; }
+  .tab {
+    justify-self: start; display: flex; align-items: center; gap: 0.45rem; margin: 0;
+    background: var(--accent); color: #fff; font-weight: 650; font-size: 0.85rem;
+    padding: 0.35rem 0.9rem 0.3rem 0.45rem; border-radius: 10px 10px 0 0;
+  }
+  .tab img { border-radius: 5px; background: #fff; }
+  .grid .sheet {
+    background: var(--paper); border: 1px solid var(--paper-edge); border-top: 3px solid var(--accent);
+    border-radius: 0 12px 12px 12px; box-shadow: var(--lift); padding: 1rem 1.2rem 1.2rem;
+    display: grid; gap: 0.6rem; align-content: start;
+  }
+  .thumb { width: 100%; aspect-ratio: 16 / 8; object-fit: cover; border-radius: 8px; display: block; margin-bottom: 0.3rem; background: color-mix(in srgb, var(--accent) 20%, #101411); }
+  .grid h2 { font-size: var(--step-1); line-height: 1.2; }
+  @media (hover: hover) {
+    .grid .post .sheet, .lead { transition: box-shadow 200ms, translate 200ms; }
+    .grid .post:hover .sheet, .lead:hover { box-shadow: var(--lift-high); translate: 0 -2px; }
+  }
+  .post[hidden] { display: none; }
+  .empty, .none { padding: 1.2rem 1.4rem; background: var(--note); color: var(--note-ink); border-radius: 4px; max-width: 34rem; }
+  .none[hidden] { display: none; }
+
+  @media (max-width: 52rem) {
+    .lead { grid-template-columns: minmax(0, 1fr); }
+    .lead .cover { min-height: 0; aspect-ratio: 16 / 9; height: auto; }
+  }
 </style>

@@ -1,6 +1,90 @@
-.prose { max-width: 68ch; }
-.prose h2 { font-size: var(--step-1); margin: 2.2rem 0 0.6rem; }
-.prose h3 { font-size: var(--step-0); margin: 1.6rem 0 0.4rem; }
-.prose p, .prose ul, .prose ol, .prose pre { margin: 0 0 1rem; }
-.prose li { margin-bottom: 0.35rem; }
-.prose img { border-radius: 8px; border: 1px solid var(--paper-edge); }
+.prose { max-width: 68ch; font-size: 1.08rem; line-height: 1.7; }
+.prose > :first-child { margin-top: 0; }
+.prose h2 {
+  font-size: var(--step-2); margin: 3rem 0 0.8rem; scroll-margin-top: 1.5rem;
+  padding-top: 1.4rem; border-top: 1px dashed var(--mat-major);
+}
+.prose h3 { font-size: var(--step-1); margin: 2rem 0 0.5rem; scroll-margin-top: 1.5rem; }
+.prose p, .prose ul, .prose ol, .prose pre, .prose table { margin: 0 0 1.1rem; }
+.prose li { margin-bottom: 0.4rem; }
+.prose li::marker { color: var(--accent, var(--pen)); }
+.prose strong { font-weight: 700; }
+.prose img { border-radius: 10px; border: 1px solid var(--paper-edge); display: block; }
+
+/* The opening paragraph is a little larger. */
+.prose > p:first-child { font-size: 1.2rem; line-height: 1.6; }
+
+/* Code: a dark block with the file name on a tab. */
+.prose pre {
+  position: relative; background: var(--ink) !important; color: #e7efe9;
+  padding: 1.1rem 1.25rem; border-radius: 12px; font-size: 0.86rem; line-height: 1.6;
+  margin-left: calc(-1 * min(2rem, 4vw)); margin-right: calc(-1 * min(2rem, 4vw));
+  box-shadow: 0 10px 30px -14px rgb(21 32 26 / 0.6);
+}
+.prose pre[data-title]::before {
+  content: attr(data-title); display: block;
+  margin: -1.1rem -1.25rem 1rem; padding: 0.55rem 1.25rem;
+  background: #1f2b24; color: #c4cec7; font-family: var(--mono); font-size: 0.78rem;
+  border-bottom: 2px solid var(--accent, var(--pen)); white-space: nowrap;
+}
+.prose pre code { font-variant-ligatures: none; background: none; padding: 0; font-size: inherit; }
+.prose :not(pre) > code { font-size: 0.86em; background: color-mix(in srgb, var(--accent, var(--pen)) 13%, white); padding: 0.1em 0.35em; border-radius: 5px; }
+.prose kbd {
+  font-family: var(--sans); font-size: 0.85em; padding: 0.05em 0.45em; border-radius: 5px;
+  border: 1px solid var(--mat-major); border-bottom-width: 2px; background: var(--paper);
+}
+
+/* Tables */
+.prose table { width: 100%; border-collapse: collapse; font-size: 0.95rem; display: block; overflow-x: auto; }
+.prose th, .prose td { text-align: left; padding: 0.5rem 0.8rem 0.5rem 0; border-bottom: 1px solid var(--paper-edge); vertical-align: top; }
+.prose th { font-weight: 700; border-bottom: 2px solid var(--ink); }
+
+/* A note in the margin: blockquotes are asides. */
+.prose blockquote {
+  margin: 1.6rem 0; padding: 0.9rem 1.1rem; background: var(--note); color: var(--note-ink);
+  border-radius: 4px; transform: rotate(-0.4deg); box-shadow: var(--lift);
+}
+.prose blockquote p { margin: 0; }
+.prose blockquote p + p { margin-top: 0.5rem; }
+
+/* Figures: screenshots and diagrams. */
+.prose figure { margin: 2rem calc(-1 * min(2rem, 4vw)); }
+.prose figcaption { font-size: 0.9rem; color: var(--muted); margin-top: 0.6rem; padding: 0 min(2rem, 4vw); line-height: 1.45; }
+.prose figure.shot img { width: 100%; }
+
+/* Diagrams are inline SVG drawn with these classes, so they share the page's fonts and colours. */
+.diagram {
+  background: var(--mat); border: 1px solid var(--mat-major); border-radius: 12px; padding: 1rem;
+  background-image: linear-gradient(var(--mat-line) 1px, transparent 1px), linear-gradient(90deg, var(--mat-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.diagram svg { display: block; width: 100%; height: auto; overflow: visible; }
+.diagram text { font-family: var(--sans); font-size: 14px; fill: var(--ink); }
+.diagram .mono { font-family: var(--mono); font-size: 13px; }
+.diagram .hand { font-family: var(--hand); font-size: 20px; fill: var(--muted); }
+.diagram .small { font-size: 12px; }
+.diagram .muted { fill: var(--muted); }
+.diagram .bold { font-weight: 700; }
+.diagram .on-dark { fill: var(--paper); }
+.diagram .box { fill: var(--paper); stroke: var(--ink); stroke-width: 1.5; }
+.diagram .soft { fill: var(--paper); stroke: var(--mat-major); stroke-width: 1.5; }
+.diagram .dark { fill: var(--ink); }
+.diagram .accent { fill: var(--accent, var(--pen)); }
+.diagram .accent-soft { fill: color-mix(in srgb, var(--accent, var(--pen)) 18%, white); stroke: var(--accent, var(--pen)); stroke-width: 1.5; }
+.diagram .note { fill: var(--note); }
+.diagram .line { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.diagram .dash { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 5; }
+.diagram .accent-line { fill: none; stroke: var(--accent, var(--pen)); stroke-width: 2.5; }
+.diagram .pen-line { fill: none; stroke: var(--pen); stroke-width: 2; }
+
+@media (max-width: 40rem) {
+  .prose { font-size: 1.02rem; }
+  .prose pre { font-size: 0.8rem; }
+  .prose pre, .prose figure { margin-left: calc(-1 * clamp(1.3rem, 5vw, 3rem)); margin-right: calc(-1 * clamp(1.3rem, 5vw, 3rem)); }
+  .prose pre { border-radius: 0; }
+  .diagram { border-radius: 0; border-left: 0; border-right: 0; padding: 0.6rem; }
+}
+
+/* Diagrams keep a readable size on phones and scroll sideways inside their frame instead. */
+.diagram { overflow-x: auto; }
+.diagram svg { min-width: 500px; }

@@ -1,36 +1,175 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Page from '../../layouts/Page.astro';
-import Related from '../../components/Related.astro';
 import { publishedPosts } from '../../lib/content';
+import { appFor, readingMinutes } from '../../lib/posts';
 import '../../styles/prose.css';
 
 export async function getStaticPaths() {
   const posts = publishedPosts(await getCollection('writing'), import.meta.env.PROD);
-  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+  return posts.map((post, i) => ({
+    params: { slug: post.id },
+    props: { post, newer: posts[i - 1], older: posts[i + 1] },
+  }));
 }
 
-const { post } = Astro.props;
-const { Content } = await render(post);
+const { post, newer, older } = Astro.props;
+const { Content, headings } = await render(post);
 const d = post.data;
+const app = appFor(post, await getCollection('apps'));
+const accent = app?.data.accent ?? 'var(--pen)';
 const date = d.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+const minutes = readingMinutes(post.body ?? '');
+const toc = headings.filter((h) => h.depth === 2);
+const tags = d.tags.filter((t) => t !== app?.data.title);
 ---
-<Page title={d.title} description={d.description}>
-  <p class="meta">
-    <span class="kind">{d.kind === 'guide' ? 'Guide' : 'Post'}</span>
-    <time datetime={d.date.toISOString()}>{date}</time>
-    {d.draft && <span class="draft">Draft, not public</span>}
-  </p>
-  <h1>{d.title}</h1>
-  <p class="desc">{d.description}</p>
-  <article class="prose"><Content /></article>
-  <Related ids={d.related} />
+<Page title={d.title} description={d.description} ogImage={app ? `/apps/${app.id}/banner.jpg` : undefined} full>
+  <div class="post" style={`--accent: ${accent}`}>
+    <header class="hero">
+      {app && (
+        <a class="chip" href={`/apps/${app.id}/`}><img src={app.data.icon} alt="" width="32" height="32" /><span>{app.data.title}<small>{app.data.tagline}</small></span></a>
+      )}
+      <h1>{d.title}</h1>
+      <p class="desc">{d.description}</p>
+      <p class="meta">
+        <time datetime={d.date.toISOString()}>{date}</time>
+        <span>{minutes} min read</span>
+        {d.draft && <span class="draft">Draft, not public</span>}
+      </p>
+      {tags.length > 0 && <ul class="tags" aria-label="Topics">{tags.map((t) => <li>{t}</li>)}</ul>}
+    </header>
+
+    {app && <img class="banner" src={`/apps/${app.id}/banner.jpg`} alt={`${app.data.title} banner`} />}
+
+    <div class="layout">
+      {toc.length > 2 && (
+        <nav class="toc" aria-label="In this post">
+          <p>In this post</p>
+          <ol>{toc.map((h) => <li><a href={`#${h.slug}`}>{h.text}</a></li>)}</ol>
+        </nav>
+      )}
+      <article class="prose"><Content /></article>
+    </div>
+
+    {app && (
+      <aside class="appcard">
+        <img src={app.data.icon} alt="" width="64" height="64" />
+        <div>
+          <h2>{app.data.title}</h2>
+          <p>{app.data.summary}</p>
+          <p class="links">
+            <a class="primary" href={app.data.links.site}>Open {app.data.title}</a>
+            {app.data.links.store && <a href={app.data.links.store}>Google Play</a>}
+            <a href={app.data.links.github}>Source on GitHub</a>
+          </p>
+        </div>
+      </aside>
+    )}
+
+    {(newer || older) && (
+      <nav class="more" aria-label="More posts">
+        {newer ? <a class="newer" href={`/writing/${newer.id}/`}><small>Newer</small>{newer.data.title}</a> : <span></span>}
+        {older ? <a class="older" href={`/writing/${older.id}/`}><small>Older</small>{older.data.title}</a> : <span></span>}
+      </nav>
+    )}
+  </div>
 </Page>
 
+<script>
+  // Mark the section being read in the contents list.
+  const links = new Map(
+    [...document.querySelectorAll<HTMLAnchorElement>('.toc a')].map((a) => [decodeURIComponent(a.hash.slice(1)), a]),
+  );
+  if (links.size && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          for (const a of links.values()) a.removeAttribute('aria-current');
+          links.get(e.target.id)?.setAttribute('aria-current', 'true');
+        }
+      },
+      { rootMargin: '0px 0px -70% 0px' },
+    );
+    for (const id of links.keys()) {
+      const h = document.getElementById(id);
+      if (h) io.observe(h);
+    }
+  }
+</script>
+
 <style>
-  .meta { display: flex; gap: 0.8rem; align-items: center; margin: 0 0 0.6rem; color: var(--muted); font-size: var(--step--1); }
-  .kind { background: var(--pen-soft); color: var(--pen); padding: 0.05rem 0.55rem; border-radius: 999px; }
-  .draft { background: var(--note); color: var(--note-ink); padding: 0.05rem 0.55rem; border-radius: 4px; }
-  h1 { font-size: var(--step-3); }
-  .desc { font-size: var(--step-1); line-height: 1.45; color: var(--muted); margin: 1rem 0 2rem; }
+  .post { --measure: 44rem; }
+  .hero { max-width: 52rem; margin: 1.2rem 0 2rem; display: grid; gap: 1rem; justify-items: start; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; color: var(--ink);
+    background: var(--paper); border: 1px solid var(--paper-edge); border-left: 5px solid var(--accent);
+    border-radius: 12px; padding: 0.35rem 0.9rem 0.35rem 0.45rem; box-shadow: var(--lift);
+  }
+  .chip img { border-radius: 8px; }
+  .chip span { display: grid; font-weight: 700; line-height: 1.2; }
+  .chip small { font-weight: 400; color: var(--muted); font-size: 0.82rem; }
+  .chip:hover { border-color: var(--accent); }
+  h1 { font-size: var(--step-4); font-stretch: 112%; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+  .desc { font-size: var(--step-1); line-height: 1.45; color: var(--muted); margin: 0; max-width: 46ch; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; margin: 0; color: var(--muted); font-size: var(--step--1); }
+  .meta span::before { content: ''; display: inline-block; width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--accent); margin-right: 0.45rem; vertical-align: 0.08em; }
+  .draft { background: var(--note); color: var(--note-ink); padding: 0 0.5rem; border-radius: 4px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 0.35rem; list-style: none; padding: 0; margin: 0; }
+  .tags li { font-size: 0.8rem; border: 1px solid var(--mat-major); border-radius: 999px; padding: 0.1rem 0.6rem; color: var(--muted); background: rgb(255 255 255 / 0.4); }
+
+  .banner {
+    display: block; width: 100%; max-height: 26rem; object-fit: cover; border-radius: 16px;
+    box-shadow: var(--lift-high); background: color-mix(in srgb, var(--accent) 20%, #101411);
+  }
+
+  .layout {
+    display: grid; grid-template-columns: 13rem minmax(0, var(--measure)); gap: 2.5rem;
+    justify-content: center; align-items: start; margin-top: -3rem; position: relative;
+  }
+  .layout:not(:has(.toc)) { grid-template-columns: minmax(0, var(--measure)); }
+  .prose {
+    background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 10px;
+    box-shadow: var(--lift-high); padding: clamp(1.3rem, 5vw, 3rem);
+  }
+  .toc { position: sticky; top: 1.5rem; margin-top: 4.5rem; font-size: 0.9rem; }
+  .toc p { font-family: var(--hand); font-size: 1.4rem; margin: 0 0 0.4rem; color: var(--muted); }
+  .toc ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.1rem; border-left: 2px solid var(--mat-major); }
+  .toc a { display: block; padding: 0.3rem 0 0.3rem 0.9rem; margin-left: -2px; border-left: 2px solid transparent; color: var(--muted); text-decoration: none; line-height: 1.3; }
+  .toc a:hover { color: var(--ink); }
+  .toc a[aria-current] { color: var(--ink); border-left-color: var(--accent); font-weight: 600; }
+
+  .appcard {
+    max-width: calc(var(--measure) + 15.5rem); margin: 2.5rem auto 0; display: flex; gap: 1.2rem; align-items: flex-start;
+    background: var(--ink); color: var(--paper); border-radius: 16px; padding: 1.6rem; border-top: 5px solid var(--accent);
+  }
+  .appcard img { border-radius: 16px; flex: none; background: var(--paper); }
+  .appcard h2 { font-size: var(--step-2); }
+  .appcard p { margin: 0.4rem 0 0; color: #c4cec7; max-width: 52ch; }
+  .appcard .links { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+  .appcard a { padding: 0.45rem 0.95rem; border-radius: 999px; text-decoration: none; font-size: 0.92rem; color: var(--paper); border: 1px solid #4a5a50; }
+  .appcard a:hover { border-color: var(--paper); }
+  .appcard a.primary { background: var(--paper); color: var(--ink); border-color: var(--paper); font-weight: 600; }
+  .appcard a.primary:hover { background: var(--note); border-color: var(--note); }
+
+  .more { max-width: calc(var(--measure) + 15.5rem); margin: 1.4rem auto 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .more a {
+    display: grid; gap: 0.2rem; padding: 1rem 1.2rem; background: var(--paper); border: 1px solid var(--paper-edge);
+    border-radius: 12px; color: var(--ink); text-decoration: none; font-weight: 650; line-height: 1.3; box-shadow: var(--lift);
+  }
+  .more a:hover { border-color: var(--ink); }
+  .more small { font-weight: 400; color: var(--muted); }
+  .more .older { text-align: right; }
+
+  @media (max-width: 64rem) {
+    .layout { grid-template-columns: minmax(0, var(--measure)); margin-top: -2rem; }
+    .toc { display: none; }
+  }
+  @media (max-width: 40rem) {
+    .layout { margin-top: 1rem; }
+    .prose { border-radius: 8px; }
+    .appcard { flex-direction: column; }
+    .more { grid-template-columns: minmax(0, 1fr); }
+    .more .older { text-align: left; }
+  }
 </style>
