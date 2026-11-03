@@ -1,14 +1,21 @@
 ---
 title: How OAF opens almost any file, and saves without breaking it
 description: Detecting file types from bytes instead of names, one engine registry, and why OAF patches Word and Excel files instead of rewriting them.
-date: 2026-11-03
+date: 2026-11-03T12:05:00Z
 kind: guide
 tags: [Android, Kotlin, OAF]
-draft: true
 related: [oaf]
 ---
 
 [OAF](/apps/oaf/) is an Android app that opens PDFs, Word, Excel, slides, e-books, archives, pictures, audio and video, and edits most of them. "Open everything" sounds like a list of parsers. In practice the interesting problems were somewhere else: working out what a file actually is, and saving a file you only half understand without damaging the rest.
+
+## What it solves
+
+A phone collects files from everywhere: email attachments, downloads, chat apps, a USB stick, a network drive. Opening them usually means one app for PDFs, another for Word, another for zips, and a few of those want an account or upload the file somewhere first. OAF is one app for all of it, and nothing leaves the phone.
+
+## Built with
+
+Kotlin and Jetpack Compose with Material 3, on Android 10 and up. Apache POI and PdfBox-Android for Office files and PDFs, Apache Commons Compress, XZ for Java and junrar for archives, SMBJ and JSch for network drives, and ML Kit for the on-device picture tools. The code is split by job: `format/` works out what a file is, `doc/`, `sheet/`, `pdf/` and `slides/` handle each family, and `engine/` decides which viewer opens what.
 
 ## Don't trust the file name
 

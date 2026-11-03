@@ -1,14 +1,23 @@
 ---
 title: Keeping a Mac awake with the lid closed, without leaving it broken
 description: Why lid-closed mode needs root, and everything CaffeinateCat does so it never leaves your Mac unable to sleep.
-date: 2026-11-03
+date: 2026-11-03T12:06:00Z
 kind: post
 tags: [macOS, Swift, CaffeinateCat]
-draft: true
 related: [caffeinatecat]
 ---
 
 Keeping a Mac awake with the lid open is a solved problem. Keeping it awake with the lid shut, on battery, is not, and the reason why is the interesting part of [CaffeinateCat](/apps/caffeinatecat/).
+
+## What it solves
+
+Sometimes a Mac has to keep going while you're away from it: a build, a local server, a long download. The obvious fix is to change the sleep settings and remember to change them back, which nobody does. And if you want to close the lid and put the laptop in a bag while it works, on battery, macOS doesn't offer that at all.
+
+CaffeinateCat is a menu bar app with two switches. **Keep Screen Awake** stops idle sleep. **Keep Awake on Lid Close** does the same and also keeps the Mac running with the lid shut, even unplugged. Both can run for a set time or until you turn them off.
+
+## Built with
+
+Swift 5, as a handful of source files with no Xcode project. It runs on macOS 12 and up. The only dependency is Sparkle for automatic updates, and `build.sh` downloads a pinned, checksum-verified copy, then builds, signs and optionally notarizes the app. A plain `swiftc -O -o CaffeinateCat *.swift` also works and simply has no updater.
 
 ## The easy mode
 
