@@ -1,0 +1,21 @@
+{
+  "name": "prempoddar-site",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node scripts/check-dist.mjs dist",
+    "preview": "astro preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^5.18.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}
