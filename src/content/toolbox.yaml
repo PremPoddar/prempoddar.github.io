@@ -1,0 +1,115 @@
+# One entry per tool. Icons live in public/toolbox/<id>.png.
+- id: privacy-guides
+  name: Privacy Guides
+  url: https://www.privacyguides.org/en/tools/
+  category: Privacy & security
+  why: Where I start when I need a private alternative to something. Opinionated, sourced and no affiliate junk.
+  tags: [free, guide]
+- id: objective-see
+  name: Objective-See tools
+  url: https://objective-see.org/tools.html
+  category: Privacy & security
+  why: Free Mac security tools by Patrick Wardle. A firewall, persistence alerts and more, all open source.
+  tags: [free, open source, macOS]
+- id: browserleaks
+  name: BrowserLeaks
+  url: https://browserleaks.com
+  category: Privacy & security
+  why: Shows you exactly what your browser gives away. Humbling the first time.
+  tags: [free, web, no account]
+- id: control-d
+  name: Control D
+  url: https://controld.com
+  category: Privacy & security
+  why: DNS that blocks ads and trackers for every device at once, with real control over what gets through.
+  tags: [web]
+- id: mail-tm
+  name: mail.tm
+  url: https://mail.tm
+  category: Privacy & security
+  why: A throwaway inbox for sites that want an email before they'll show you anything.
+  tags: [free, web, no account]
+- id: ghidra
+  name: Ghidra
+  url: https://github.com/nationalsecurityagency/ghidra
+  category: Reverse engineering & dev
+  why: The NSA's reverse engineering suite, free and open source. The decompiler alone is worth the install.
+  tags: [free, open source]
+- id: input-lag
+  name: Input lag measuring tool
+  url: https://basro.github.io/input-lag-measuring-tool/
+  category: Reverse engineering & dev
+  why: Film your screen with your phone and it measures your real input lag. Clever and tiny.
+  tags: [free, web, no account]
+- id: f-droid
+  name: F-Droid
+  url: https://f-droid.org
+  category: Android
+  why: An app store with only free and open source Android apps. No tracking, no accounts.
+  tags: [free, open source, Android]
+- id: morphe
+  name: Morphe
+  url: https://morphe.software
+  category: Android
+  why: Patches YouTube, YouTube Music and Reddit on Android to block ads, skip sponsors and tidy the interface.
+  tags: [free, open source, Android]
+- id: excalidraw
+  name: Excalidraw
+  url: https://excalidraw.com
+  category: Make & share
+  why: A whiteboard that's great for sketching architecture. The hand drawn look means nobody mistakes a sketch for a final design.
+  tags: [free, open source, web, no account]
+- id: telegraph
+  name: Telegraph
+  url: https://telegra.ph
+  category: Make & share
+  why: Publish a page in ten seconds with no account. Good for sharing notes that are too long for a chat.
+  tags: [free, web, no account]
+- id: blip
+  name: Blip
+  url: https://blip.net
+  category: Make & share
+  why: Sends files of any size between any devices, whatever they run. No more emailing things to yourself.
+  tags: [free]
+- id: noxdrop
+  name: NoxDrop
+  url: https://noxdrop.com
+  category: Indie software
+  why: An independent studio making careful little apps for Mac, iPhone and iPad. Worth a browse.
+  tags: [macOS, iOS]
+- id: desmos
+  name: Desmos
+  url: https://www.desmos.com/calculator
+  category: Math & science
+  why: The graphing calculator I wish I'd had in school. Drag a slider and watch the maths move.
+  tags: [free, web, no account]
+- id: xcas
+  name: Xcas
+  url: https://xcas.univ-grenoble-alpes.fr/en.html
+  category: Math & science
+  why: A free computer algebra system from Grenoble. Does the symbolic maths most calculators can't.
+  tags: [free, open source]
+- id: feynman
+  name: The Feynman Lectures on Physics
+  url: https://www.feynmanlectures.caltech.edu
+  category: Math & science
+  why: All three volumes, free to read online. Still the best explanation of most of physics.
+  tags: [free, web, reading]
+- id: library-of-babel
+  name: The Library of Babel
+  url: https://libraryofbabel.info
+  category: Rabbit holes
+  why: Every possible page of text already exists here, including this one. Hard to stop clicking.
+  tags: [free, web]
+- id: evolution-of-trust
+  name: The Evolution of Trust
+  url: https://ncase.me/trust/
+  category: Rabbit holes
+  why: A 30 minute playable explanation of game theory and why people trust each other, or don't.
+  tags: [free, web, no account]
+- id: z-library
+  name: Z-Library
+  url: https://z-lib.sk
+  category: Reading
+  why: A huge library of books and papers. Domains move around, so check the link if it stops working.
+  tags: [free, reading]
