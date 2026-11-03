@@ -1,0 +1,98 @@
+---
+import { existsSync } from 'node:fs';
+import { getCollection } from 'astro:content';
+import Page from '../layouts/Page.astro';
+import { TOOLBOX_CATEGORIES } from '../content.config';
+import { groupByCategory, type Tool } from '../lib/toolbox';
+import { site } from '../data/site';
+
+const entries = await getCollection('toolbox');
+const tools: Tool[] = entries.map((e) => ({ id: e.id, ...e.data }));
+const groups = groupByCategory(tools, TOOLBOX_CATEGORIES);
+const tags = [...new Set(tools.flatMap((t) => t.tags))].sort();
+const icon = (id: string) => (existsSync(`public/toolbox/${id}.png`) ? `/toolbox/${id}.png` : null);
+const host = (url: string) => new URL(url).host.replace(/^www\./, '');
+---
+<Page title="Toolbox" description="Tools, apps, sites and reading I recommend, each with a line on why it's here." wide>
+  <h1>Toolbox</h1>
+  <p class="lede">Tools, apps and sites I'd point a friend to. Each one has a line on why it made the cut. I add to it when I find something good.</p>
+
+  <div class="controls" data-toolbox-controls hidden>
+    <label class="search">
+      <span class="visually-hidden">Search the toolbox</span>
+      <input type="search" placeholder="Search tools, sites, tags" data-q autocomplete="off" />
+    </label>
+    <div class="chips" role="group" aria-label="Category">
+      <button type="button" aria-pressed="true" data-cat="">All</button>
+      {groups.map((g) => <button type="button" aria-pressed="false" data-cat={g.category}>{g.category}</button>)}
+    </div>
+    <div class="chips tags" role="group" aria-label="Tag">
+      {tags.map((t) => <button type="button" aria-pressed="false" data-tag={t}>{t}</button>)}
+    </div>
+  </div>
+
+  <p class="count" aria-live="polite" data-count></p>
+
+  {groups.map((g) => (
+    <section data-group={g.category}>
+      <h2>{g.category}</h2>
+      <ul class="tools">
+        {g.tools.map((t) => {
+          const src = icon(t.id);
+          return (
+            <li data-tool={t.id} data-cat={t.category} data-tags={t.tags.join('|')} data-hay={[t.name, t.why, host(t.url), ...t.tags].join(' ').toLowerCase()}>
+              {src ? <img src={src} alt="" width="32" height="32" loading="lazy" /> : <span class="letter" aria-hidden="true">{t.name[0]}</span>}
+              <div>
+                <a href={t.url} rel="noopener">{t.name}</a>
+                <span class="host">{host(t.url)}</span>
+                <p>{t.why}</p>
+                <ul class="t">{t.tags.map((tag) => <li>{tag}</li>)}</ul>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  ))}
+
+  <p class="empty" data-empty hidden>Nothing matches that yet. Know something that belongs here? Tell me at <a href={`mailto:${site.email}`}>{site.email}</a>.</p>
+</Page>
+
+<script>
+  import { initToolbox } from '../scripts/toolbox';
+  initToolbox();
+</script>
+
+<style>
+  h1 { font-size: var(--step-3); }
+  .lede { color: var(--muted); max-width: 56ch; margin: 0.6rem 0 1.6rem; }
+  .controls { display: grid; gap: 0.7rem; margin-bottom: 0.6rem; }
+  .controls[hidden] { display: none; }
+  input[type='search'] {
+    width: 100%; font: inherit; padding: 0.7rem 1rem; border-radius: 10px; border: 1px solid var(--mat-major);
+    background: var(--paper); color: var(--ink);
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .chips button {
+    font: inherit; font-size: var(--step--1); padding: 0.25rem 0.75rem; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--mat-major); background: var(--paper); color: var(--ink);
+  }
+  .chips.tags button { font-size: 0.8rem; color: var(--muted); }
+  .chips button[aria-pressed='true'] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .count { color: var(--muted); font-size: var(--step--1); min-height: 1.4em; }
+  section { margin-top: 2rem; }
+  section[hidden] { display: none; }
+  h2 { font-size: var(--step-1); margin-bottom: 0.8rem; }
+  .tools { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 0.8rem; }
+  .tools > li { display: flex; gap: 0.9rem; align-items: flex-start; padding: 0.9rem 1rem; border: 1px solid var(--paper-edge); border-radius: 12px; background: #fff; }
+  .tools > li[hidden] { display: none; }
+  .tools img, .letter { width: 32px; height: 32px; border-radius: 8px; flex: none; }
+  .letter { display: grid; place-items: center; background: var(--pen-soft); color: var(--pen); font-weight: 750; }
+  .tools a { font-weight: 700; }
+  .host { margin-left: 0.4rem; color: var(--muted); font-size: 0.8rem; }
+  .tools p { margin: 0.25rem 0 0.4rem; font-size: 0.95rem; line-height: 1.45; }
+  .t { display: flex; flex-wrap: wrap; gap: 0.3rem; list-style: none; padding: 0; margin: 0; }
+  .t li { font-size: 0.72rem; color: var(--muted); background: var(--mat); border-radius: 4px; padding: 0 0.4rem; }
+  .empty { padding: 1rem 1.2rem; background: var(--note); color: var(--note-ink); border-radius: 4px; max-width: 34rem; }
+  .empty a { color: inherit; }
+</style>
