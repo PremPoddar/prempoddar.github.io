@@ -3,7 +3,7 @@ title: OAF
 platform: [android]
 tagline: Open All Files
 summary: One Android app that opens and edits almost any file, with no ads and nothing uploaded.
-order: 3
+order: 2
 featured: false
 icon: /apps/oaf/icon.svg
 screenshots: [/apps/oaf/showcase.jpg]

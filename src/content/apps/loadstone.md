@@ -3,7 +3,7 @@ title: Loadstone
 platform: [android]
 tagline: Find your way back
 summary: Save a spot and one arrow walks you back to it, with no maps and no internet.
-order: 4
+order: 3
 featured: true
 icon: /apps/loadstone/icon.png
 screenshots: [/apps/loadstone/showcase.jpg]

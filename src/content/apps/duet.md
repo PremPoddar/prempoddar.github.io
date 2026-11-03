@@ -3,7 +3,7 @@ title: Duet
 platform: [android]
 tagline: Listen to music together, in sync
 summary: The same song plays on up to eight phones at the same moment, on one sofa or in different cities.
-order: 2
+order: 5
 featured: true
 icon: /apps/duet/icon.svg
 screenshots: [/apps/duet/showcase.jpg]

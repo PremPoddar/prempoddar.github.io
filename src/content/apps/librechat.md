@@ -3,7 +3,7 @@ title: LibreChat
 platform: [android]
 tagline: Messaging without internet
 summary: Phones pass encrypted messages to each other over Bluetooth until they reach the right person.
-order: 1
+order: 6
 featured: true
 icon: /apps/librechat/icon.svg
 screenshots: [/apps/librechat/showcase.jpg]

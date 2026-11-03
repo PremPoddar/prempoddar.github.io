@@ -3,7 +3,7 @@ title: Campfire
 platform: [android, web]
 tagline: A chat room for everyone nearby
 summary: One phone hosts a chat, everyone else joins from their browser by scanning a QR code.
-order: 5
+order: 7
 featured: false
 icon: /apps/campfire/icon.svg
 screenshots: [/apps/campfire/showcase.jpg]

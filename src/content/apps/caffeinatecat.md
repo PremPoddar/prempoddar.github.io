@@ -3,7 +3,7 @@ title: CaffeinateCat
 platform: [macos]
 tagline: Keep your Mac awake, even with the lid closed
 summary: A small menu bar app that stops a Mac from sleeping, so long jobs keep running in your bag.
-order: 6
+order: 1
 featured: false
 icon: /apps/caffeinatecat/icon.png
 screenshots: [/apps/caffeinatecat/showcase.jpg]

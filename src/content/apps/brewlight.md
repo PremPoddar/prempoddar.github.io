@@ -3,7 +3,7 @@ title: Brewlight
 platform: [macos]
 tagline: Spotlight, but for Homebrew
 summary: A fast Mac app that searches about 16,000 Homebrew packages as you type and installs them in one click.
-order: 7
+order: 4
 featured: true
 icon: /apps/brewlight/icon.png
 screenshots: [/apps/brewlight/showcase.jpg]
