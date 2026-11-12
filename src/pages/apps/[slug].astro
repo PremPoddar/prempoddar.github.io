@@ -3,6 +3,9 @@ import { getCollection, render } from 'astro:content';
 import Page from '../../layouts/Page.astro';
 import Platforms from '../../components/Platforms.astro';
 import Related from '../../components/Related.astro';
+import JsonLd from '../../components/JsonLd.astro';
+import { softwareApplicationSchema } from '../../lib/seo';
+import { site } from '../../data/site';
 import '../../styles/prose.css';
 
 export async function getStaticPaths() {
@@ -13,8 +16,10 @@ export async function getStaticPaths() {
 const { app } = Astro.props;
 const { Content } = await render(app);
 const d = app.data;
+const canonical = new URL(Astro.url.pathname, site.origin).href;
 ---
 <Page title={d.title} description={d.summary} ogImage={d.screenshots[0]}>
+  <JsonLd data={[softwareApplicationSchema(d, canonical)]} />
   <header class="head" style={`--accent: ${d.accent}`}>
     <img class="icon" src={d.icon} alt="" width="72" height="72" />
     <div>

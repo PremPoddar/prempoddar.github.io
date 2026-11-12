@@ -13,7 +13,7 @@ const tags = [...new Set(tools.flatMap((t) => t.tags))].sort();
 const icon = (id: string) => (existsSync(`public/toolbox/${id}.png`) ? `/toolbox/${id}.png` : null);
 const host = (url: string) => new URL(url).host.replace(/^www\./, '');
 ---
-<Page title="Toolbox" description="Tools, apps, sites and reading I recommend, each with a line on why it's here." wide>
+<Page title="Prem Poddar's Toolbox - apps and sites I recommend" description="Tools, apps, sites and reading I recommend, each with a line on why it's here." wide absolute>
   <h1>Toolbox</h1>
   <p class="lede">Tools, apps and sites I'd point a friend to. Each one has a line on why it made the cut. I add to it when I find something good.</p>
 

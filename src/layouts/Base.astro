@@ -1,16 +1,33 @@
 ---
 import '../styles/global.css';
 import { site } from '../data/site';
+import { personSchema, websiteSchema } from '../lib/seo';
+import JsonLd from '../components/JsonLd.astro';
 
 interface Props {
   title: string;
   description: string;
   ogImage?: string;
+  ogType?: 'website' | 'article';
+  publishedTime?: string;
+  ogImageWidth?: number;
+  ogImageHeight?: number;
+  absolute?: boolean;
 }
 
-const { title, description, ogImage = '/og.jpg' } = Astro.props;
+const {
+  title,
+  description,
+  ogImage = '/og.jpg',
+  ogType = 'website',
+  publishedTime,
+  ogImageWidth,
+  ogImageHeight,
+  absolute = false,
+} = Astro.props;
 const canonical = new URL(Astro.url.pathname, site.origin).href;
-const fullTitle = title === site.name ? site.name : `${title} | ${site.name}`;
+const fullTitle = absolute ? title : `${title} | ${site.name}`;
+const image = new URL(ogImage, site.origin).href;
 ---
 <!doctype html>
 <html lang="en">
@@ -21,16 +38,24 @@ const fullTitle = title === site.name ? site.name : `${title} | ${site.name}`;
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="alternate" type="application/rss+xml" title={`${site.name}, writing`} href="/rss.xml" />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <meta name="theme-color" content="#e5ebe3" />
-    <meta property="og:type" content="website" />
+    <meta name="google-site-verification" content="W8fzQ8yXuCIAOU05BRlFMitbXawtlL_d0aXooERSyXY" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={new URL(ogImage, site.origin).href} />
+    <meta property="og:image" content={image} />
+    {ogImageWidth && <meta property="og:image:width" content={String(ogImageWidth)} />}
+    {ogImageHeight && <meta property="og:image:height" content={String(ogImageHeight)} />}
+    <meta property="og:image:alt" content={`Preview image for ${fullTitle}`} />
+    {ogType === 'article' && publishedTime && <meta property="article:published_time" content={publishedTime} />}
+    {ogType === 'article' && <meta property="article:author" content={`${site.origin}/`} />}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@premp0ddar" />
+    <JsonLd data={[personSchema(), websiteSchema()]} />
     <slot name="head" />
   </head>
   <body>

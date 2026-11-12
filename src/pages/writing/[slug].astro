@@ -3,6 +3,9 @@ import { getCollection, render } from 'astro:content';
 import Page from '../../layouts/Page.astro';
 import { publishedPosts } from '../../lib/content';
 import { appFor, readingMinutes } from '../../lib/posts';
+import JsonLd from '../../components/JsonLd.astro';
+import { blogPostingSchema } from '../../lib/seo';
+import { site } from '../../data/site';
 import '../../styles/prose.css';
 
 export async function getStaticPaths() {
@@ -22,8 +25,23 @@ const date = d.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long',
 const minutes = readingMinutes(post.body ?? '');
 const toc = headings.filter((h) => h.depth === 2);
 const tags = d.tags.filter((t) => t !== app?.data.title);
+const canonical = new URL(Astro.url.pathname, site.origin).href;
+const banner = app ? new URL(`/apps/${app.id}/banner.jpg`, site.origin).href : undefined;
+// Keep in sync with the real banner files in public/apps/.
+const BANNER_HEIGHTS: Record<string, number> = { brewlight: 800 };
+const bannerHeight = app ? (BANNER_HEIGHTS[app.id] ?? 525) : undefined;
 ---
-<Page title={d.title} description={d.description} ogImage={app ? `/apps/${app.id}/banner.jpg` : undefined} full>
+<Page
+  title={d.title}
+  description={d.description}
+  ogImage={app ? `/apps/${app.id}/banner.jpg` : undefined}
+  ogType="article"
+  publishedTime={d.date.toISOString()}
+  ogImageWidth={app ? 1600 : undefined}
+  ogImageHeight={bannerHeight}
+  full
+>
+  <JsonLd data={[blogPostingSchema(d, canonical, banner)]} />
   <div class="post" style={`--accent: ${accent}`}>
     <header class="hero">
       {app && (

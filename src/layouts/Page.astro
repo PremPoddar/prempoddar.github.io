@@ -9,10 +9,15 @@ interface Props {
   wide?: boolean;
   full?: boolean;
   ogImage?: string;
+  ogType?: 'website' | 'article';
+  publishedTime?: string;
+  ogImageWidth?: number;
+  ogImageHeight?: number;
+  absolute?: boolean;
 }
-const { title, description, wide = false, full = false, ogImage } = Astro.props;
+const { title, description, wide = false, full = false, ogImage, ogType, publishedTime, ogImageWidth, ogImageHeight, absolute } = Astro.props;
 ---
-<Base title={title} description={description} ogImage={ogImage}>
+<Base title={title} description={description} ogImage={ogImage} ogType={ogType} publishedTime={publishedTime} ogImageWidth={ogImageWidth} ogImageHeight={ogImageHeight} absolute={absolute}>
   <a class="skip" href="#main">Skip to content</a>
   <Nav />
   <main id="main" class:list={[full ? 'full' : 'sheet', { wide }]}>
