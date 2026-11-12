@@ -28,3 +28,12 @@ npm run build    # builds into dist/ and checks the output
 3. Back in **Pages**, set the custom domain to `prempoddar.is-a.dev` and turn on **Enforce HTTPS**.
 
 `public/CNAME` already contains the domain, so it survives every deploy.
+
+## SEO notes
+
+- The sitemap (`/sitemap-index.xml`) is generated at build time from the built pages, with lastmod dates read from git history. Adding a page needs no sitemap work.
+- A new **subdomain** is a separate site to search engines: it needs its own sitemap, its own robots.txt and its own Search Console and Bing properties.
+- Structured data lives in `src/lib/seo.ts`, rendered by `src/components/JsonLd.astro`. `Base.astro` puts Person and WebSite schema on every page, app pages add SoftwareApplication, writing posts add BlogPosting. Copy the existing pattern when adding a new page type.
+- Adding an app also means updating the hand-written app lists: the description in `src/pages/apps/index.astro` and the list line in `src/pages/index.astro`, plus the app card in `src/data/canvas.ts`.
+- Google Search Console is verified with a meta tag in `src/layouts/Base.astro`. New pages are discovered on their own; "Request Indexing" in Search Console just speeds it up.
+
