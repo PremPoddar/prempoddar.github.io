@@ -46,9 +46,9 @@ export function checkDist(distDir) {
     if (/yandex/i.test(raw)) problems.push(`${rel}: yandex`);
     if (/[—–]/.test(text)) problems.push(`${rel}: em or en dash in page text`);
 
-    const inToolbox = rel.split(sep)[0] === 'toolbox';
+    const inResources = rel.split(sep)[0] === 'resources';
     const nox = raw.toLowerCase().split(ALLOWED_NOXDROP).join('');
-    if (!inToolbox && nox.includes('noxdrop')) problems.push(`${rel}: NoxDrop mentioned outside the toolbox`);
+    if (!inResources && nox.includes('noxdrop')) problems.push(`${rel}: NoxDrop mentioned outside the resources`);
   }
 
   return problems;

@@ -49,13 +49,13 @@ describe('checkDist', () => {
     expect(checkDist(dir)).toEqual([]);
   });
 
-  it('flags noxdrop outside the toolbox', () => {
+  it('flags noxdrop outside the resources section', () => {
     put('apps/oaf/index.html', page('<a href="https://noxdrop.com">x</a>'));
     expect(checkDist(dir).length).toBeGreaterThan(0);
   });
 
-  it('allows noxdrop in the toolbox', () => {
-    put('toolbox/index.html', page('<a href="https://noxdrop.com">NoxDrop</a>'));
+  it('allows noxdrop in the resources section', () => {
+    put('resources/index.html', page('<a href="https://noxdrop.com">NoxDrop</a>'));
     expect(checkDist(dir)).toEqual([]);
   });
 

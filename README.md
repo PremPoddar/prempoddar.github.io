@@ -1,6 +1,6 @@
 # prempoddar.is-a.dev
 
-My personal site: apps, client work, writing, a toolbox of things I recommend, and my resume.
+My personal site: apps, client work, writing, resources I recommend, and my resume.
 
 Built with Astro. Every push to `main` runs the tests, builds the site and deploys it to GitHub Pages.
 
@@ -18,7 +18,7 @@ npm run build    # builds into dist/ and checks the output
 ## Adding things
 
 - **A post or guide:** add a Markdown file to `src/content/writing/`. Set `draft: true` while you're still working on it. Drafts show up in `npm run dev` but never on the live site.
-- **A toolbox entry:** add an entry to `src/content/toolbox.yaml`. Put its icon in `public/toolbox/<id>.png`, or run `node scripts/fetch-favicons.mjs` to fetch any that are missing.
+- **A resources entry:** add an entry to `src/content/resources.yaml`. Put its icon in `public/toolbox/<id>.png`, or run `node scripts/fetch-favicons.mjs` to fetch any that are missing.
 - **An app:** add a Markdown file to `src/content/apps/` and its images to `public/apps/<slug>/`. To put it on the homepage desk, add it to `src/data/canvas.ts`.
 
 ## One-time setup

@@ -1,6 +1,6 @@
-// Live search and filters for the toolbox page. The list is rendered on the server, so it works without this.
-export function initToolbox(root: Document = document) {
-  const controls = root.querySelector<HTMLElement>('[data-toolbox-controls]');
+// Live search and filters for the resources page. The list is rendered on the server, so it works without this.
+export function initResources(root: Document = document) {
+  const controls = root.querySelector<HTMLElement>('[data-resources-controls]');
   if (!controls) return;
   controls.hidden = false;
 
@@ -28,7 +28,7 @@ export function initToolbox(root: Document = document) {
     }
     for (const g of groups) g.hidden = !g.querySelector('[data-tool]:not([hidden])');
     empty.hidden = shown > 0;
-    count.textContent = shown === items.length ? `${items.length} things in the toolbox` : `Showing ${shown} of ${items.length}`;
+    count.textContent = shown === items.length ? `${items.length} things here` : `Showing ${shown} of ${items.length}`;
   }
 
   input.addEventListener('input', apply);

@@ -35,7 +35,7 @@ const filters = [
   </header>
 
   {!lead ? (
-    <p class="empty">The first posts are still on the workbench. Meanwhile, the <a href="/toolbox/">toolbox</a> has the tools and sites I'd point you to.</p>
+    <p class="empty">The first posts are still on the workbench. Meanwhile, the <a href="/resources/">resources</a> have the sites and tools I'd point you to.</p>
   ) : (
     <>
       <article class="lead post" data-platforms={lead.platforms.join(' ')} style={`--accent: ${lead.app?.data.accent ?? 'var(--pen)'}`}>

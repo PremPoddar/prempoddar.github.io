@@ -20,8 +20,8 @@ function filesForPage(path: string): string[] {
       return second
         ? [`src/content/work/${second}.md`, 'src/pages/work/[slug].astro', 'src/components/WorkVisual.astro']
         : ['src/pages/work/index.astro', 'src/content/work'];
-    case 'toolbox':
-      return ['src/pages/toolbox.astro', 'src/content/toolbox.yaml', 'src/lib/toolbox.ts'];
+    case 'resources':
+      return ['src/pages/resources.astro', 'src/content/resources.yaml', 'src/lib/resources.ts'];
     case 'resume':
       return ['src/pages/resume.astro', 'src/data/resume.ts'];
     default:

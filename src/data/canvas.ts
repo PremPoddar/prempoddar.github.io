@@ -7,7 +7,7 @@ export type Note = { id: string; text: string; x: number; y: number; rotate: num
 
 export const zones: Zone[] = [
   { id: 'apps', label: 'Apps', x: 0, y: 30, w: 640, h: 830 },
-  { id: 'toolbox', label: 'Toolbox', x: 1260, y: 30, w: 380, h: 490 },
+  { id: 'toolbox', label: 'Resources', x: 1260, y: 30, w: 380, h: 490 },
   { id: 'writing', label: 'Writing', x: 1260, y: 560, w: 380, h: 420 },
   { id: 'more', label: 'More apps', x: 1680, y: 30, w: 500, h: 1040 },
   { id: 'work', label: 'Client work', x: 80, y: 1110, w: 1600, h: 420 },

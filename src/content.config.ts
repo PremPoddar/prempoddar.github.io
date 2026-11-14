@@ -55,7 +55,7 @@ const writing = defineCollection({
   }),
 });
 
-export const TOOLBOX_CATEGORIES = [
+export const RESOURCE_CATEGORIES = [
   'Privacy & security',
   'Reverse engineering & dev',
   'Android',
@@ -66,15 +66,15 @@ export const TOOLBOX_CATEGORIES = [
   'Reading',
 ] as const;
 
-const toolbox = defineCollection({
-  loader: file('./src/content/toolbox.yaml'),
+const resources = defineCollection({
+  loader: file('./src/content/resources.yaml'),
   schema: z.object({
     name: z.string(),
     url: z.string().url(),
-    category: z.enum(TOOLBOX_CATEGORIES),
+    category: z.enum(RESOURCE_CATEGORIES),
     why: z.string(),
     tags: z.array(z.string()).default([]),
   }),
 });
 
-export const collections = { apps, work, writing, toolbox };
+export const collections = { apps, work, writing, resources };

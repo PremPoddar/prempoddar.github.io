@@ -18,7 +18,7 @@ const apps = new Map((await getCollection('apps')).map((a) => [a.id, a]));
 const work = new Map((await getCollection('work')).map((w) => [w.id, w]));
 const posts = publishedPosts(await getCollection('writing'), import.meta.env.PROD);
 const latest = posts[0];
-const tools = await getCollection('toolbox');
+const tools = await getCollection('resources');
 const boardTools = tools.filter((t) => t.id !== 'noxdrop' && existsSync(`public/toolbox/${t.id}.png`)).slice(0, 12);
 
 const at = (id: string) => items.find((i) => i.id === id)!;
@@ -123,16 +123,16 @@ function app(id: string): CollectionEntry<'apps'> {
         )}
       </Card>
 
-      <h2 class="stack-heading">Toolbox</h2>
-      <Card {...at('toolbox-board')} kind="board" zone="toolbox" label="Toolbox">
-        <h3><a href="/toolbox/">Toolbox</a></h3>
-        <p class="sum">Tools, apps and sites I'd point a friend to, each with a line on why.</p>
+      <h2 class="stack-heading">Resources</h2>
+      <Card {...at('toolbox-board')} kind="board" zone="resources" label="Resources">
+        <h3><a href="/resources/">Resources</a></h3>
+        <p class="sum">Sites, guides and tools I'd point a friend to, each with a line on why.</p>
         <ul class="pegs">
           {boardTools.map((t) => (
             <li><a href={t.data.url} title={t.data.name}><img src={`/toolbox/${t.id}.png`} alt={t.data.name} width="36" height="36" loading="lazy" /></a></li>
           ))}
         </ul>
-        <p><a href="/toolbox/">Open the toolbox ({tools.length} picks)</a></p>
+        <p><a href="/resources/">Open the resources ({tools.length} picks)</a></p>
       </Card>
 
       <h2 class="stack-heading">Client work</h2>
@@ -155,7 +155,7 @@ function app(id: string): CollectionEntry<'apps'> {
     <a href="/apps/">Apps</a>
     <a href="/work/">Work</a>
     <a href="/writing/">Writing</a>
-    <a href="/toolbox/">Toolbox</a>
+    <a href="/resources/">Resources</a>
     <a href="/resume/">Resume</a>
   </nav>
 </div>

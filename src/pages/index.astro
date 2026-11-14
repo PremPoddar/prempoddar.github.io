@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import Workbench from '../components/canvas/Workbench.astro';
 import { site } from '../data/site';
 ---
-<Base title="Prem Poddar | App Developer - Android, iOS, macOS, Web" description={`${site.tagline} Apps, client work, writing and a toolbox of things I recommend.`} absolute ogImageWidth={1200} ogImageHeight={630}>
+<Base title="Prem Poddar | App Developer - Android, iOS, macOS, Web" description={`${site.tagline} Apps, client work, writing and resources I recommend.`} absolute ogImageWidth={1200} ogImageHeight={630}>
   <script is:inline slot="head">document.documentElement.classList.add('js');</script>
   <a class="skip" href="#list">Skip to the list view</a>
   <main>
@@ -14,7 +14,7 @@ import { site } from '../data/site';
         <li><a href="/apps/">Apps</a>: LibreChat, Duet, OAF, Loadstone, Campfire, CaffeinateCat and Brewlight</li>
         <li><a href="/work/">Client work</a>: an ECG engine for iOS and Android, ejercicioysalud.org and an underwater modem evaluation</li>
         <li><a href="/writing/">Writing</a>: posts and guides</li>
-        <li><a href="/toolbox/">Toolbox</a>: tools and sites I recommend</li>
+        <li><a href="/resources/">Resources</a>: sites, guides and tools I recommend</li>
         <li><a href="/resume/">Resume</a>, or email <a href={`mailto:${site.email}`}>{site.email}</a></li>
       </ul>
     </section>

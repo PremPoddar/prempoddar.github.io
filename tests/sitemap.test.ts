@@ -17,9 +17,13 @@ describe('lastmodForPage', () => {
     expect(lastmodForPage('/writing/')).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
-  it('dates the toolbox and the resume', () => {
-    expect(lastmodForPage('/toolbox/')).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  it('dates the resources section, the tools hub and the resume', () => {
+    expect(lastmodForPage('/resources/')).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(lastmodForPage('/resume/')).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it('no longer maps the old toolbox url', () => {
+    expect(lastmodForPage('/toolbox/')).toBeUndefined();
   });
 
   it('accepts full urls and skips pages it cannot map', () => {
