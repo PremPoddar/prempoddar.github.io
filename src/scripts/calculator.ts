@@ -144,11 +144,11 @@ export function initCalculator(root: Document = document) {
   renderStack();
 
   // Converter: expression in, press sequence out, with step playback.
-  const form = section.querySelector<HTMLFormElement>('[data-convert]')!;
+  const form = root.querySelector<HTMLFormElement>('[data-convert]')!;
   const input = form.querySelector<HTMLInputElement>('[data-expr]')!;
   const degBox = form.querySelector<HTMLInputElement>('[data-deg]')!;
   const target = form.querySelector<HTMLSelectElement>('[data-target]')!;
-  const seqOut = section.querySelector<HTMLElement>('[data-seq]')!;
+  const seqOut = root.querySelector<HTMLElement>('[data-seq]')!;
   const seqTape = seqOut.querySelector<HTMLElement>('[data-seq-tape]')!;
   const seqInfo = seqOut.querySelector<HTMLElement>('[data-seq-info]')!;
   const playBtn = seqOut.querySelector<HTMLButtonElement>('[data-play]')!;
