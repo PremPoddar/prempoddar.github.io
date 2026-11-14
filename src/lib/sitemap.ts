@@ -22,6 +22,8 @@ function filesForPage(path: string): string[] {
         : ['src/pages/work/index.astro', 'src/content/work'];
     case 'resources':
       return ['src/pages/resources.astro', 'src/content/resources.yaml', 'src/lib/resources.ts'];
+    case 'tools':
+      return ['src/pages/tools/index.astro'];
     case 'resume':
       return ['src/pages/resume.astro', 'src/data/resume.ts'];
     default:

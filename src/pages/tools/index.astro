@@ -1,0 +1,19 @@
+---
+import Page from '../../layouts/Page.astro';
+---
+<Page title="Tools by Prem Poddar - web apps that run in the browser" description="Small web apps I built that you can use right here: no install, no account. Starting with a scientific calculator that only has two buttons." full absolute>
+  <header class="intro">
+    <h1>Tools</h1>
+    <p class="lede">Things I built that you can use right here in the browser. No install, no account, nothing leaves your device.</p>
+  </header>
+  <section class="soon">
+    <h2>On the bench</h2>
+    <p>The first tool is a scientific calculator that works with only two buttons, straight out of a Numberphile video. It lands here shortly.</p>
+  </section>
+</Page>
+
+<style>
+  .intro h1 { font-size: var(--step-3); }
+  .lede { color: var(--muted); max-width: 56ch; margin: 0.6rem 0 2rem; }
+  .soon { padding: 1rem 1.2rem; background: var(--note); color: var(--note-ink); border-radius: 4px; max-width: 34rem; }
+</style>
