@@ -1,0 +1,194 @@
+---
+import Page from '../../layouts/Page.astro';
+import JsonLd from '../../components/JsonLd.astro';
+import { webApplicationSchema } from '../../lib/seo';
+
+const canonical = 'https://prempoddar.is-a.dev/tools/two-button-calculator/';
+const palette = ['×', '÷', '^', '√', 'π', 'e', 'i', '(', ')', 'sin(', 'cos(', 'tan(', 'asin(', 'acos(', 'atan(', 'sinh(', 'cosh(', 'tanh(', 'ln(', 'log(', 'exp('];
+---
+<Page title="Two-Button Scientific Calculator - press the Numberphile machine" description="A working two-button calculator, EML(x, y) = e^x - ln y, straight from Numberphile. Type any expression and watch it compile into button presses, or press the buttons yourself." absolute>
+  <JsonLd data={[webApplicationSchema(
+    { name: 'Two-Button Scientific Calculator', description: 'A scientific calculator that runs on only two buttons: 1 and EML(x, y) = e^x - ln y. Also includes the four-button machine (1, -, exp, ln) from the same video.' },
+    canonical,
+  )]} />
+  <header class="intro">
+    <h1>Two-Button Scientific Calculator</h1>
+    <p class="lede">
+      A calculator with only two buttons that can still do everything: sin, cos, π, complex powers, all of it.
+      The machine comes from the Numberphile video
+      <a href="https://www.youtube.com/watch?v=LxVW3b8jVdE" rel="noopener">A Two-Button Calculator That Does Everything</a>,
+      where Dr James Grime explains the idea from <a href="https://arxiv.org/a/odrzywolek_a_1" rel="noopener">Andrzej Odrzywołek</a>.
+      Video by Brady Haran. This page is my working version of it.
+    </p>
+  </header>
+
+  <p class="note">
+    Everything is computed with exp and ln only. That means <code>ln</code> is the natural log everywhere,
+    and <code>log</code> means log base 10: the page computes it as <code>ln(x) ÷ ln(10)</code>.
+  </p>
+
+  <section class="calc" data-calc aria-label="The calculator">
+    <div class="tabs" role="group" aria-label="Which machine">
+      <button type="button" data-machine="four" aria-pressed="true">Four buttons: 1, −, exp, ln</button>
+      <button type="button" data-machine="two" aria-pressed="false">Two buttons: 1, EML</button>
+    </div>
+
+    <div class="face">
+      <output class="display" data-stack aria-live="polite">0</output>
+      <span class="depth">stack: <span data-depth>0</span></span>
+    </div>
+    <p class="err" data-calc-error aria-live="polite" hidden></p>
+
+    <ul class="tape" data-tape aria-label="Presses so far"></ul>
+    <div class="keys" data-keys></div>
+    <p class="hint">
+      Keyboard: <kbd>1</kbd> pushes, <kbd>-</kbd> subtracts, <kbd>e</kbd> is exp, <kbd>l</kbd> is ln,
+      <kbd>Enter</kbd> is EML on the two-button machine, <kbd>Backspace</kbd> undoes one press.
+      On the two-button machine, EML(x, y) = e<sup>x</sup> - ln(y): it pops y then x.
+    </p>
+  </section>
+
+  <section class="convert" aria-label="Expression to button presses">
+    <h2>Type an expression, get the presses</h2>
+    <form data-convert>
+      <div class="row">
+        <label class="expr">
+          <span class="visually-hidden">Expression</span>
+          <input type="text" data-expr placeholder="sin(30) + √2 × π" autocomplete="off" spellcheck="false" enterkeyhint="go" />
+        </label>
+        <button class="go" type="submit">Compile</button>
+      </div>
+      <div class="row opts">
+        <label class="toggle"><input type="checkbox" data-deg /> angles in degrees</label>
+        <label class="toggle">target machine
+          <select data-target>
+            <option value="four">four-button (1, −, exp, ln)</option>
+            <option value="two">two-button (1, EML)</option>
+          </select>
+        </label>
+      </div>
+      <div class="palette" role="group" aria-label="Insert into the expression">
+        {palette.map((t) => <button type="button" data-ins={t}>{t.replace('(', '')}</button>)}
+      </div>
+      <p class="err" data-conv-error aria-live="polite" hidden></p>
+    </form>
+
+    <div class="seq" data-seq hidden>
+      <p class="seq-info" data-seq-info></p>
+      <ul class="tape" data-seq-tape aria-label="Compiled press sequence"></ul>
+      <div class="seq-foot">
+        <button type="button" class="go" data-play>Play</button>
+        <output data-seq-result aria-live="polite"></output>
+      </div>
+    </div>
+  </section>
+
+  <section class="foot">
+    <h2>How two buttons do all that</h2>
+    <p>One button pushes 1. The other, <code>EML(x, y) = e<sup>x</sup> - ln(y)</code>, is enough to rebuild the whole keypad:</p>
+    <ul class="ids">
+      <li><code>e = EML(1, 1)</code></li>
+      <li><code>exp(x) = EML(x, 1)</code></li>
+      <li><code>x - y = EML(ln x, exp y)</code></li>
+      <li><code>ln(x) = EML(1, exp(EML(1, x)))</code></li>
+      <li><code>0 = EML(1, exp(exp 1))</code></li>
+      <li><code>x + y = EML(ln x, exp(-y))</code></li>
+    </ul>
+    <p>
+      The four-button machine (1, −, exp, ln) gets there with plain stack arithmetic instead.
+      Either way, trig, powers, roots and log base 10 are all rebuilt from those pieces,
+      so a short expression can turn into hundreds or thousands of presses. That is the fun of it.
+    </p>
+    <p class="small">
+      One honest limit: on the two-button machine, an operand whose imaginary part passes ±π
+      picks up a 2πi branch error, because EML's ln cannot see past the principal branch.
+      The four-button machine has no such limit. Numbers are float64 throughout.
+    </p>
+  </section>
+</Page>
+
+<script>
+  import { initCalculator } from '../../scripts/calculator';
+  initCalculator();
+</script>
+
+<style is:global>
+  .intro h1 { font-size: var(--step-3); }
+  .lede { color: var(--muted); max-width: 58ch; margin: 0.6rem 0 1.6rem; }
+  .note {
+    background: var(--note); color: var(--note-ink);
+    padding: 0.8rem 1rem; border-radius: 4px; max-width: 34rem;
+    font-size: var(--step--1); margin-bottom: 1.6rem;
+  }
+  .note code, .ids code { font-family: var(--mono); font-size: 0.9em; }
+
+  .calc {
+    background: var(--mat); border: 1px solid var(--mat-line); border-radius: 6px;
+    padding: 1rem; box-shadow: var(--lift);
+  }
+  .tabs { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+  .tabs button {
+    flex: 1; min-height: 44px; border: 1px solid var(--mat-major); background: var(--paper);
+    border-radius: 4px; font: inherit; font-size: var(--step--1); cursor: pointer; color: var(--muted);
+  }
+  .tabs button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .face { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
+    background: var(--ink); color: #b8f5c9; border-radius: 4px; padding: 0.7rem 0.9rem; }
+  .display { font-family: var(--mono); font-size: var(--step-2); overflow-wrap: anywhere; min-height: 1.4em; }
+  .depth { font-size: var(--step--1); opacity: 0.7; white-space: nowrap; }
+  .err { color: #a33; font-size: var(--step--1); margin: 0.4rem 0 0; }
+  .tape {
+    list-style: none; display: flex; gap: 0.3rem; overflow-x: auto; padding: 0.6rem 0.1rem;
+    margin: 0; scrollbar-width: thin; min-height: 2.4rem; align-items: center;
+  }
+  .chip {
+    flex: none; font-family: var(--mono); font-size: var(--step--1);
+    background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 3px;
+    padding: 0.15rem 0.45rem;
+  }
+  .chip.now { background: var(--pen-soft); border-color: var(--pen); }
+  .keys { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .key {
+    min-width: 64px; min-height: 44px; border: 1px solid var(--mat-major); background: var(--paper);
+    border-radius: 4px; cursor: pointer; text-align: center; padding: 0.3rem 0.6rem;
+  }
+  .key span { display: block; font-family: var(--mono); font-size: var(--step-0); }
+  .key small { color: var(--muted); font-size: 0.7rem; }
+  .key:active { background: var(--pen-soft); border-color: var(--pen); }
+  .hint { color: var(--muted); font-size: var(--step--1); margin: 0.8rem 0 0; }
+  kbd { font-family: var(--mono); background: var(--paper); border: 1px solid var(--paper-edge);
+    border-radius: 3px; padding: 0 0.3rem; }
+
+  .convert { margin-top: 2.2rem; }
+  .convert h2 { font-size: var(--step-1); }
+  .row { display: flex; gap: 0.5rem; }
+  .expr { flex: 1; }
+  .expr input {
+    width: 100%; min-height: 44px; font-family: var(--mono); font-size: var(--step-0);
+    border: 1px solid var(--mat-major); border-radius: 4px; padding: 0 0.7rem; background: var(--paper);
+  }
+  .go { min-height: 44px; border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+    border-radius: 4px; padding: 0 1rem; font: inherit; cursor: pointer; }
+  .opts { margin-top: 0.6rem; font-size: var(--step--1); color: var(--muted); flex-wrap: wrap; }
+  .toggle { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .toggle select, .toggle input { accent-color: var(--pen); }
+  .palette { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.6rem; }
+  .palette button {
+    min-height: 36px; border: 1px solid var(--paper-edge); background: var(--paper); border-radius: 3px;
+    font-family: var(--mono); font-size: var(--step--1); cursor: pointer; padding: 0 0.5rem;
+  }
+  .seq { margin-top: 1rem; border: 1px dashed var(--mat-major); border-radius: 6px; padding: 0.8rem; }
+  .seq-info { margin: 0 0 0.4rem; font-size: var(--step--1); color: var(--muted); }
+  .seq-foot { display: flex; align-items: center; gap: 0.8rem; margin-top: 0.4rem; }
+  .seq-foot output { font-family: var(--mono); font-size: var(--step-0); overflow-wrap: anywhere; }
+
+  .foot { margin-top: 2.2rem; color: var(--muted); }
+  .foot h2 { font-size: var(--step-1); color: var(--ink); }
+  .ids { columns: 2 16rem; padding-left: 1.2rem; }
+  .ids li { margin-bottom: 0.3rem; }
+  .small { font-size: var(--step--1); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tape { scroll-behavior: auto; }
+  }
+</style>
