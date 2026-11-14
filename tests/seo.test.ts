@@ -4,6 +4,7 @@ import {
   personSchema,
   websiteSchema,
   softwareApplicationSchema,
+  webApplicationSchema,
   blogPostingSchema,
 } from '../src/lib/seo';
 
@@ -102,6 +103,32 @@ describe('softwareApplicationSchema', () => {
       'https://prempoddar.is-a.dev/apps/brewlight/',
     );
     expect('screenshot' in bare).toBe(false);
+  });
+});
+
+describe('webApplicationSchema', () => {
+  const schema = webApplicationSchema(
+    {
+      name: 'Two-Button Scientific Calculator',
+      description: 'A scientific calculator that works with only two buttons.',
+    },
+    'https://prempoddar.is-a.dev/tools/two-button-calculator/',
+  );
+
+  it('describes a free web app by Prem at its own address', () => {
+    expect(schema['@type']).toBe('WebApplication');
+    expect(schema.name).toBe('Two-Button Scientific Calculator');
+    expect(schema.description).toMatch(/two buttons/);
+    expect(schema.applicationCategory).toBe('WebApplication');
+    expect(schema.operatingSystem).toBe('Any');
+    expect(schema.isAccessibleForFree).toBe(true);
+    expect(schema.offers).toEqual({ '@type': 'Offer', price: '0', priceCurrency: 'USD' });
+    expect(schema.author).toEqual({
+      '@type': 'Person',
+      name: 'Prem Poddar',
+      url: 'https://prempoddar.is-a.dev/',
+    });
+    expect(schema.url).toBe('https://prempoddar.is-a.dev/tools/two-button-calculator/');
   });
 });
 

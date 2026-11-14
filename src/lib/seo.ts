@@ -53,6 +53,23 @@ export function softwareApplicationSchema(
   return schema;
 }
 
+export function webApplicationSchema(
+  app: { name: string; description: string },
+  url: string,
+) {
+  return {
+    '@type': 'WebApplication',
+    name: app.name,
+    description: app.description,
+    applicationCategory: 'WebApplication',
+    operatingSystem: 'Any',
+    isAccessibleForFree: true,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    author,
+    url,
+  };
+}
+
 export function blogPostingSchema(
   post: { title: string; description: string; date: Date },
   url: string,
