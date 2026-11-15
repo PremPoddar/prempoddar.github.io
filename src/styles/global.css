@@ -5,6 +5,9 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* The hidden attribute must beat any author display value. */
+[hidden] { display: none !important; }
+
 html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
 
 body {
