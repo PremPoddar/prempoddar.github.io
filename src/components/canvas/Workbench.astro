@@ -276,9 +276,9 @@ function app(id: string): CollectionEntry<'apps'> {
   .world :global(.card-repo h3) { margin: 0; font-size: 1.15rem; }
   .world :global(.card-repo .sum) { font-size: 0.85rem; margin: 0.35rem 0 0.55rem; }
   .world :global(.card-repo .url) {
-    display: inline-block; font-family: var(--mono); font-size: 0.72rem;
+    display: inline-block; font-family: var(--mono); font-size: 0.66rem; white-space: nowrap;
     background: var(--mat); border: 1px solid var(--mat-line); border-radius: 4px;
-    padding: 0.25rem 0.5rem; overflow-wrap: anywhere;
+    padding: 0.25rem 0.45rem;
   }
   .world :global(.card-repo .cover) { position: absolute; inset: 0; border-radius: inherit; }
   .world :global(.card-repo:hover) { border-color: var(--pen); }
