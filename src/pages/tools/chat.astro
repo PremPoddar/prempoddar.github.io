@@ -1,0 +1,228 @@
+---
+import Page from '../../layouts/Page.astro';
+import JsonLd from '../../components/JsonLd.astro';
+import { webApplicationSchema } from '../../lib/seo';
+
+const canonical = 'https://prempoddar.is-a.dev/tools/chat/';
+const claims =
+  'Close the tab and everything is gone. Messages, photos and files travel directly between devices, encrypted. Nothing is stored anywhere, by us or anyone.';
+---
+<Page title="No-trace chat - Prem Poddar" description="A chat room that keeps nothing: close the tab and every message, photo and file is gone. Messages travel directly between devices, encrypted, and nothing is stored anywhere, by us or anyone." absolute>
+  <JsonLd data={[webApplicationSchema(
+    { name: 'No-trace chat', description: claims },
+    canonical,
+  )]} />
+  <header class="intro">
+    <h1>No-trace chat</h1>
+    <p class="lede">{claims}</p>
+  </header>
+
+  <!--
+    DOM contract for the script (scripts/chat.ts):
+    - data-landing form: one submit handler. e.submitter is data-create or data-join.
+      data-code is pre-filled from location.hash by the script. Enter inside data-code
+      should join, so it needs its own keydown, not the form's default button.
+    - data-members holds <li>Name <span class="tag">owner</span></li> entries.
+    - data-requests (owner only) holds request rows:
+      <p class="req-row"><span class="name">Name</span>
+        <button type="button" data-accept data-userid="...">Accept</button>
+        <button type="button" data-decline data-userid="...">Decline</button></p>
+    - every message is one <li class="msg [mine]">:
+        <p class="who"><b>Name</b> <time>hh:mm</time></p>
+        text:   <div class="bubble">paragraphs</div>
+        code:   <div class="codewrap"><pre><code></code></pre><button class="copy">Copy</button></div>
+        file:   <div class="filechip"><a download>Name (size)</a> or <progress> while moving</div>
+        then:   <p class="seen">Seen by ...</p>
+                <div class="reacts"><button aria-pressed>emoji</button>...</div>
+  -->
+  <section class="chatwrap" aria-label="No-trace chat room">
+    <p class="err" data-error aria-live="polite" hidden></p>
+    <p class="status" data-status aria-live="polite" hidden></p>
+
+    <form class="landing" data-landing>
+      <p class="hint">Pick a display name. It is the only thing this page saves, and it never leaves your browser.</p>
+      <label class="field">
+        <span class="visually-hidden">Display name</span>
+        <input type="text" data-name maxlength="24" autocomplete="off" spellcheck="false" enterkeyhint="go" placeholder="Amber Otter" />
+      </label>
+      <div class="gets">
+        <button type="submit" class="get" data-create>Create a room</button>
+        <button type="submit" class="get ghost" data-join>Join</button>
+      </div>
+      <label class="codeline">
+        <span>Or join with a code someone gave you</span>
+        <input type="text" data-code placeholder="river-fox-tent" autocomplete="off" spellcheck="false" enterkeyhint="go" />
+      </label>
+    </form>
+
+    <div class="room" data-room hidden>
+      <div class="bar">
+        <ul class="members" data-members></ul>
+        <button type="button" class="ctl" data-leave>Leave</button>
+      </div>
+      <div class="requests" data-requests hidden></div>
+      <ul class="msgs" data-msgs role="log"></ul>
+      <div class="linkrow">
+        <output class="linkout" data-link></output>
+        <button type="button" class="ctl" data-copy-link>Copy link</button>
+      </div>
+      <div class="composer">
+        <textarea data-compose rows="3" aria-label="Message" placeholder="Write a message"></textarea>
+        <div class="compose-row">
+          <label class="ctl attach" for="chat-file">Attach<small>photos and files, 25 MB max</small></label>
+          <input class="visually-hidden" type="file" id="chat-file" data-file />
+          <button type="button" class="go" data-send>Send</button>
+        </div>
+        <p class="hint"><kbd>Enter</kbd> sends, <kbd>Shift</kbd> + <kbd>Enter</kbd> adds a line.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="foot">
+    <h2>What this page keeps</h2>
+    <p>
+      Almost nothing. Rooms hold up to 8 people and vanish when the last person leaves.
+      Introductions go through BitTorrent's public introduction network, which never sees message
+      content. Your display name and a random ID stay on your device. A file you download is saved
+      where you choose; nothing else is written anywhere.
+    </p>
+  </section>
+</Page>
+
+<style is:global>
+  .intro h1 { font-size: var(--step-3); }
+  .lede { color: var(--muted); max-width: 58ch; margin: 0.6rem 0 1.6rem; }
+
+  .chatwrap { margin-top: 1rem; }
+  .err { color: #a33; font-size: var(--step--1); margin: 0 0 0.6rem; }
+  .status {
+    background: var(--note); color: var(--note-ink); padding: 0.5rem 0.7rem;
+    border-radius: 4px; font-size: var(--step--1); margin: 0 0 0.6rem; max-width: 26rem;
+  }
+
+  .landing {
+    max-width: 26rem; background: var(--mat); border: 1px solid var(--mat-major);
+    border-radius: 12px; padding: 0.9rem; box-shadow: var(--lift);
+  }
+  .landing .hint { color: var(--muted); font-size: var(--step--1); margin: 0 0 0.7rem; }
+  .field { display: block; }
+  .field input, .codeline input {
+    width: 100%; min-height: 44px; font: inherit; font-size: var(--step-0);
+    border: 1px solid var(--mat-major); border-radius: 8px; padding: 0 0.7rem; background: var(--paper);
+  }
+  .gets { display: flex; gap: 0.5rem; margin-top: 0.7rem; }
+  .get {
+    flex: 1; min-height: 44px; border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+    border-radius: 8px; padding: 0 1.1rem; font: inherit; cursor: pointer;
+  }
+  .get:hover { background: var(--pen); border-color: var(--pen); }
+  .get.ghost { background: var(--paper); color: var(--ink); border-color: var(--mat-major); }
+  .get.ghost:hover { border-color: var(--pen); }
+  .codeline { display: block; margin-top: 0.8rem; font-size: var(--step--1); color: var(--muted); }
+  .codeline input { margin-top: 0.3rem; }
+
+  .room { display: flex; flex-direction: column; gap: 0.6rem; max-width: 34rem; }
+  .bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+    background: var(--mat); border: 1px solid var(--mat-major); border-radius: 12px; padding: 0.5rem 0.8rem;
+  }
+  .members { list-style: none; display: flex; flex-wrap: wrap; gap: 0.2rem 0.9rem; margin: 0; padding: 0; }
+  .members li { font-size: var(--step--1); }
+  .members .tag {
+    color: var(--muted); font-size: 0.66rem; border: 1px solid var(--paper-edge);
+    border-radius: 3px; padding: 0 0.3rem; margin-left: 0.25rem;
+  }
+
+  .requests {
+    border: 1px dashed var(--pen); background: var(--note); color: var(--note-ink);
+    border-radius: 8px; padding: 0.6rem 0.8rem; font-size: var(--step--1);
+  }
+  .req-title { margin: 0; font-weight: 600; }
+  .req-row { display: flex; align-items: center; gap: 0.5rem; margin: 0.4rem 0 0; }
+  .req-row .name { flex: 1; overflow-wrap: anywhere; }
+  .req-row button {
+    min-height: 34px; border-radius: 6px; font: inherit; font-size: var(--step--1); cursor: pointer;
+    padding: 0 0.7rem; border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+  }
+  .req-row button:hover { background: var(--pen); border-color: var(--pen); }
+  .req-row [data-decline] { background: var(--paper); color: var(--ink); border-color: var(--mat-major); }
+
+  .msgs {
+    list-style: none; margin: 0; padding: 0.8rem; height: 46vh; overflow-y: auto;
+    background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 8px; scrollbar-width: thin;
+  }
+  .msgs li { margin-bottom: 0.7rem; }
+  .msg .who { font-size: var(--step--1); color: var(--muted); margin: 0 0 0.15rem; }
+  .msg .who b { color: var(--ink); font-weight: 600; }
+  .msg .who time { font-size: 0.68rem; }
+  .msg .bubble {
+    background: var(--mat); border: 1px solid var(--mat-major); border-radius: 8px;
+    padding: 0.45rem 0.65rem; overflow-wrap: anywhere; white-space: pre-wrap; margin: 0;
+    max-width: 92%;
+  }
+  .msg.mine .bubble { background: var(--pen-soft); border-color: var(--pen); }
+  .msg p + p { margin-top: 0.35rem; }
+  .codewrap { position: relative; max-width: 92%; }
+  .codewrap pre {
+    font-family: var(--mono); font-size: var(--step--1); background: var(--ink); color: #b8f5c9;
+    padding: 0.6rem 4.2rem 0.6rem 0.7rem; border-radius: 6px; overflow-x: auto; margin: 0;
+  }
+  .codewrap pre code { font-family: inherit; color: inherit; background: none; padding: 0; }
+  .codewrap .copy {
+    position: absolute; top: 0.3rem; right: 0.3rem; font-family: var(--mono); font-size: 0.66rem;
+    background: rgba(255, 255, 255, 0.14); color: #b8f5c9; border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 3px; cursor: pointer; padding: 0.1rem 0.4rem;
+  }
+  .filechip { font-family: var(--mono); font-size: var(--step--1); }
+  .filechip progress { width: 100%; height: 8px; accent-color: var(--pen); max-width: 92%; display: block; }
+  .seen { font-size: 0.66rem; color: var(--muted); margin: 0.2rem 0 0; }
+  .reacts { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.3rem; }
+  .reacts button {
+    min-height: 28px; border: 1px solid var(--paper-edge); background: var(--paper); border-radius: 4px;
+    cursor: pointer; padding: 0 0.4rem; font-size: var(--step--1);
+  }
+  .reacts button[aria-pressed="true"] { background: var(--pen-soft); border-color: var(--pen); }
+
+  .linkrow { display: flex; align-items: center; gap: 0.5rem; }
+  .linkout {
+    flex: 1; min-width: 0; font-family: var(--mono); font-size: var(--step--1); color: var(--muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  .ctl {
+    min-height: 44px; border: 1px solid var(--mat-major); background: var(--paper);
+    border-radius: 8px; cursor: pointer; padding: 0.2rem 0.9rem; font: inherit;
+    display: inline-flex; flex-direction: column; justify-content: center; line-height: 1.2;
+  }
+  .ctl small { color: var(--muted); font-size: 0.68rem; }
+  .ctl:hover { border-color: var(--pen); }
+  .composer textarea {
+    width: 100%; min-height: 64px; font: inherit; font-size: var(--step-0);
+    border: 1px solid var(--mat-major); border-radius: 8px; padding: 0.5rem 0.7rem;
+    background: var(--paper); resize: vertical;
+  }
+  .compose-row { display: flex; gap: 0.5rem; align-items: stretch; margin-top: 0.5rem; }
+  .attach { cursor: pointer; }
+  .compose-row .go {
+    margin-left: auto; min-width: 6.5rem; min-height: 44px; border: 1px solid var(--ink);
+    background: var(--ink); color: var(--paper); border-radius: 8px; font: inherit; cursor: pointer;
+  }
+  .compose-row .go:hover { background: var(--pen); border-color: var(--pen); }
+  .hint { color: var(--muted); font-size: var(--step--1); margin: 0.6rem 0 0; }
+  kbd {
+    font-family: var(--mono); background: var(--paper); border: 1px solid var(--paper-edge);
+    border-radius: 3px; padding: 0 0.3rem;
+  }
+
+  .foot { margin-top: 2.2rem; color: var(--muted); }
+  .foot h2 { font-size: var(--step-1); color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .msgs { height: 38vh; }
+    .bar { flex-wrap: wrap; }
+    .bubble, .codewrap { max-width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .msgs { scroll-behavior: auto; }
+  }
+</style>
