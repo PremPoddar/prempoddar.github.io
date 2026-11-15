@@ -100,9 +100,11 @@ const palette = ['×', '÷', '^', '√', 'π', 'e', 'i', '(', ')', 'sin(', 'cos(
       so a short expression can turn into hundreds or thousands of presses. That is the fun of it.
     </p>
     <p class="small">
-      One honest limit: on the two-button machine, an operand whose imaginary part passes ±π
+      Two honest limits of the two-button machine. An operand whose imaginary part passes ±π
       picks up a 2πi branch error, because EML's ln cannot see past the principal branch.
-      The four-button machine has no such limit. Numbers are float64 throughout.
+      And an addition with a term beyond about e<sup>709</sup> fails, because exp(−term)
+      underflows to zero and ln(0) is undefined. The four-button machine has neither limit;
+      its arithmetic is plain stack work. Numbers are float64 throughout.
     </p>
   </section>
 </Page>

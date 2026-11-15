@@ -81,7 +81,9 @@ function twoMachine(comp: Comp): Machine {
   const m: Machine = {
     zero: ['1', '1', '1', 'eml', '1', 'eml', 'eml'],
     two: TWO_2,
-    // a + b = EML(ln a, exp(-b)); the literal-1 case skips neg entirely
+    // a + b = EML(ln a, exp(-b)); the literal-1 case skips neg entirely.
+    // exp(-b) underflows to 0 once b > ~709, which then fails as ln 0:
+    // the two-button machine cannot add numbers past about e^709 this way.
     add: (a, b) =>
       is(a, 0) ? comp(b, 'raw')
       : is(b, 1) ? [...comp({ t: 'ln', a }, 'raw'), ...TWO_NEG1, '1', 'eml', 'eml']
