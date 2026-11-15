@@ -89,6 +89,11 @@ const claims =
   </section>
 </Page>
 
+<script>
+  import { initChat } from '../../scripts/chat';
+  initChat();
+</script>
+
 <style is:global>
   .intro h1 { font-size: var(--step-3); }
   .lede { color: var(--muted); max-width: 58ch; margin: 0.6rem 0 1.6rem; }
@@ -182,6 +187,9 @@ const claims =
     cursor: pointer; padding: 0 0.4rem; font-size: var(--step--1);
   }
   .reacts button[aria-pressed="true"] { background: var(--pen-soft); border-color: var(--pen); }
+  .reacts .add { color: var(--muted); }
+  .reacts .picker { display: none; gap: 0.25rem; }
+  .reacts:hover .picker, .reacts.open .picker { display: flex; }
 
   .linkrow { display: flex; align-items: center; gap: 0.5rem; }
   .linkout {
