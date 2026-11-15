@@ -145,8 +145,9 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
 
   ctl.onMessage((payload, ctx) => {
     if (payload.kind === 'roster') dispatch({type: 'roster', roster: payload.roster, from: ctx.userId});
-    // Only the roster's owner may decline; a pre-roster joiner accepts nobody.
-    if (payload.kind === 'decline' && roomState.roster && ctx.userId === roomState.roster.ownerId)
+    // Only the roster's owner may decline; a pre-roster joiner cannot verify,
+    // which is the plan's residual exposure.
+    if (payload.kind === 'decline' && (!roomState.roster || ctx.userId === roomState.roster.ownerId))
       dispatch({type: 'declined-self'});
   });
 
