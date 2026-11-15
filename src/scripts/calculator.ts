@@ -215,6 +215,7 @@ export function initCalculator(root: Document = document) {
     frame = 0;
     playBtn.textContent = 'Play';
     convErr.hidden = true;
+    convErr.textContent = '';
     seqOut.hidden = true;
     resultOut.textContent = '';
     const src = input.value.trim();
