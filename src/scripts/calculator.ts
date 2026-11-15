@@ -224,16 +224,26 @@ export function initCalculator(root: Document = document) {
   });
 
   // Copy the presses so they can be pasted into the matching calculator.
-  copyBtn.addEventListener('click', async () => {
+  // Falls back to the legacy execCommand path where the clipboard API is refused.
+  copyBtn.addEventListener('click', () => {
     if (!steps.length) return;
     const text = steps.map((s) => LABELS[s.press]).join(' ');
-    try {
-      await navigator.clipboard.writeText(text);
-      copyBtn.textContent = 'Copied';
-    } catch {
-      copyBtn.textContent = 'Copy failed';
-    }
-    setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+    const done = (ok: boolean) => {
+      copyBtn.textContent = ok ? 'Copied' : 'Copy failed';
+      setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+    };
+    navigator.clipboard.writeText(text).then(() => done(true), () => {
+      const ta = root.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.append(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      done(ok);
+    });
   });
 
   form.addEventListener('submit', (e) => {
