@@ -153,7 +153,7 @@ export function initCalculator(root: Document = document) {
   const seqInfo = seqOut.querySelector<HTMLElement>('[data-seq-info]')!;
   const playBtn = seqOut.querySelector<HTMLButtonElement>('[data-play]')!;
   const resultOut = seqOut.querySelector<HTMLElement>('[data-seq-result]')!;
-  const convErr = seqOut.querySelector<HTMLElement>('[data-conv-error]')!;
+  const convErr = form.querySelector<HTMLElement>('[data-conv-error]')!;
 
   let steps: { press: Press; stack: C[] }[] = [];
   let frame = 0;
