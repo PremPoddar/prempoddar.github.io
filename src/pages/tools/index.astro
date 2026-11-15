@@ -28,11 +28,29 @@ import Page from '../../layouts/Page.astro';
         <span class="open">Open the calculator <span class="arrow">→</span></span>
       </span>
     </a>
+
+    <a class="tool" href="/tools/chat/">
+      <span class="mini" aria-hidden="true">
+        <span class="bubbles">
+          <span class="b dark"></span>
+          <span class="b light"></span>
+          <span class="cursor"></span>
+        </span>
+        <span class="brand">NO-TRACE · P2P · EPHEMERAL</span>
+      </span>
+      <span class="body">
+        <span class="kicker">tool 02</span>
+        <h2>No-Trace Chat</h2>
+        <p>A temporary room for quick handoffs: messages, photos and files, encrypted, device to device. Close the tab and it's all gone.</p>
+        <span class="ids" aria-hidden="true">room code = 3 words · owner approves · 8 people max</span>
+        <span class="open">Open the chat <span class="arrow">→</span></span>
+      </span>
+    </a>
   </section>
 
   <aside class="bench" aria-label="Coming next">
     <h2>On the bench</h2>
-    <p>a local-first chat room, same rule: nothing leaves your device</p>
+    <p>nothing yet, the desk is full for now</p>
   </aside>
 </Page>
 
@@ -75,6 +93,16 @@ import Page from '../../layouts/Page.astro';
     transition: background 160ms ease, border-color 160ms ease;
   }
   .tool:hover .k.eml { background: var(--pen-soft); border-color: var(--pen); }
+
+  /* the chat device, drawn in CSS */
+  .bubbles { display: flex; flex-direction: column; gap: 0.4rem; min-height: 2.5rem; }
+  .b { display: block; height: 1.05rem; border-radius: 0.55rem; }
+  .b.dark { width: 72%; background: var(--ink); }
+  .b.light { width: 52%; background: var(--paper); border: 1px solid var(--mat-major); align-self: flex-end; }
+  .cursor { display: none; width: 0.55rem; height: 1rem; background: var(--pen); align-self: flex-end; }
+  .tool:hover .cursor { display: block; animation: blink 1s steps(2, start) infinite; }
+  @keyframes blink { to { visibility: hidden; } }
+
   .brand {
     display: block; margin-top: 0.6rem; font-family: var(--mono); font-size: 0.58rem;
     letter-spacing: 0.14em; color: var(--muted); text-align: center;
@@ -119,5 +147,6 @@ import Page from '../../layouts/Page.astro';
   @media (prefers-reduced-motion: reduce) {
     .tool, .lcd span, .k, .arrow { transition: none; }
     .tool:hover { transform: none; }
+    .tool:hover .cursor { animation: none; }
   }
 </style>
