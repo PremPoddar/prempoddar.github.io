@@ -135,6 +135,14 @@ function app(id: string): CollectionEntry<'apps'> {
         <p><a href="/resources/">Open the resources ({tools.length} picks)</a></p>
       </Card>
 
+      <Card {...at('fdroid-repo')} kind="repo" zone="toolbox" label="F-Droid repo">
+        <span class="kicker">f-droid repo</span>
+        <h3>Get my Android apps</h3>
+        <p class="sum">Every Android app, signed by me. Add this repo in your F-Droid client.</p>
+        <span class="url">prempoddar.is-a.dev/fdroid/repo</span>
+        <a class="cover" href="https://prempoddar.is-a.dev/fdroid/repo/" aria-label="Open Prem's F-Droid repo"></a>
+      </Card>
+
       <h2 class="stack-heading">Client work</h2>
       {workOrder.map((id) => {
         const w = work.get(id)!;
@@ -261,6 +269,19 @@ function app(id: string): CollectionEntry<'apps'> {
   .world :global(.card-index .when) { margin: 0.3rem 0 0; color: var(--muted); font-size: var(--step--1); }
 
   .world :global(.card-board) { background: #f6f7f2; }
+  .world :global(.card-repo .kicker) {
+    display: block; font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.12em;
+    color: var(--muted); margin: 0 0 0.3rem;
+  }
+  .world :global(.card-repo h3) { margin: 0; font-size: 1.15rem; }
+  .world :global(.card-repo .sum) { font-size: 0.85rem; margin: 0.35rem 0 0.55rem; }
+  .world :global(.card-repo .url) {
+    display: inline-block; font-family: var(--mono); font-size: 0.72rem;
+    background: var(--mat); border: 1px solid var(--mat-line); border-radius: 4px;
+    padding: 0.25rem 0.5rem; overflow-wrap: anywhere;
+  }
+  .world :global(.card-repo .cover) { position: absolute; inset: 0; border-radius: inherit; }
+  .world :global(.card-repo:hover) { border-color: var(--pen); }
   .world :global(.pegs) {
     list-style: none; padding: 0.8rem; margin: 0 0 0.8rem; display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.5rem;
     background-color: #e9e4d6;

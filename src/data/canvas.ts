@@ -29,6 +29,7 @@ export const items: Placement[] = [
   { id: 'brewlight', x: 20, y: 470, w: 310, rotate: 0.8 },
   { id: 'duet', x: 1700, y: 90, w: 260, rotate: 1.2 },
   { id: 'toolbox-board', x: 1280, y: 90, w: 340 },
+  { id: 'fdroid-repo', x: 1280, y: 386, w: 340 },
   { id: 'writing', x: 1300, y: 620, w: 300, rotate: 1 },
   { id: 'librechat', x: 1710, y: 590, w: 270, rotate: -1 },
   { id: 'campfire', x: 1720, y: 820, w: 260, rotate: -1.2 },
