@@ -57,6 +57,7 @@ export function initChat() {
   const linkOut = $<HTMLElement>('[data-link]');
   const copyLinkBtn = $<HTMLButtonElement>('[data-copy-link]');
   const compose = $<HTMLTextAreaElement>('[data-compose]');
+  const composerBox = compose.closest('.composer') as HTMLElement;
   const fileInput = $<HTMLInputElement>('[data-file]');
   const sendBtn = $<HTMLButtonElement>('[data-send]');
   const leaveBtn = $<HTMLButtonElement>('[data-leave]');
@@ -64,6 +65,7 @@ export function initChat() {
   const statusBanner = $<HTMLElement>('[data-status]');
 
   let handle: ChatHandle | null = null;
+  let unsub: (() => void) | null = null;
   let code = '';
   let myName = localStorage.getItem('chat-name') ?? randomName();
   let lastSnap: Snapshot | null = null;
@@ -114,9 +116,10 @@ export function initChat() {
     }
     code = create ? roomCode() : codeInput.value.trim().toLowerCase();
     errorBanner.hidden = true;
+    unsub?.();
     handle?.leave();
     handle = startRoom({code, name, create});
-    handle.subscribe(render);
+    unsub = handle.subscribe(render);
     history.replaceState(null, '', `${location.pathname}#${code}`);
     showRoom();
     compose.focus();
@@ -138,6 +141,8 @@ export function initChat() {
 
   leaveBtn.addEventListener('click', async () => {
     await handle?.leave();
+    unsub?.();
+    unsub = null;
     handle = null;
     lastSnap = null;
     for (const url of fileUrls.values()) URL.revokeObjectURL(url);
@@ -237,6 +242,9 @@ export function initChat() {
     else if (snap.role === 'waiting' || (snap.role === 'owner' && (room.roster?.members.length ?? 0) < 2))
       setStatus('Nobody is here yet. Share the room link; the room exists while at least one person is in it.');
     else setStatus(null);
+
+    // Only members can compose; waiting, pending and declined users read only.
+    composerBox.hidden = snap.role !== 'owner' && snap.role !== 'member';
 
     // Error banner.
     if (snap.error && errorBanner.hidden) showError(snap.error);

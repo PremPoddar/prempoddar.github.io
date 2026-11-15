@@ -21,7 +21,7 @@ export type ChatMessage = {
 export type Snapshot = {room: RoomState; role: Role; msgs: ChatMessage[]; error?: string};
 
 export type ChatHandle = {
-  subscribe: (fn: (s: Snapshot) => void) => void;
+  subscribe: (fn: (s: Snapshot) => void) => () => void;
   accept: (userId: string) => void;
   decline: (userId: string) => void;
   sendText: (raw: string) => void;
@@ -121,9 +121,10 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
       flush();
     }, 350);
   };
-  document.addEventListener('visibilitychange', () => {
+  const onVis = () => {
     if (document.visibilityState === 'visible') scheduleReads();
-  });
+  };
+  document.addEventListener('visibilitychange', onVis);
 
   room.onUserJoin(
     ({userId}) => {
@@ -144,7 +145,9 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
 
   ctl.onMessage((payload, ctx) => {
     if (payload.kind === 'roster') dispatch({type: 'roster', roster: payload.roster, from: ctx.userId});
-    if (payload.kind === 'decline') dispatch({type: 'declined-self'});
+    // Only the roster's owner may decline; a pre-roster joiner accepts nobody.
+    if (payload.kind === 'decline' && roomState.roster && ctx.userId === roomState.roster.ownerId)
+      dispatch({type: 'declined-self'});
   });
 
   chat.onMessage((payload, ctx) => {
@@ -156,9 +159,10 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
     flush();
   });
 
-  fileAct.onReceive((ctx) => ctx.byteLength <= MAX_FILE_BYTES);
-  fileAct.onReceiveProgress((pct, {metadata}) => {
+  fileAct.onReceive((ctx) => memberIds().has(ctx.userId) && ctx.byteLength <= MAX_FILE_BYTES);
+  fileAct.onReceiveProgress((pct, {userId, metadata}) => {
     const meta = metadata as unknown as FileMeta;
+    if (!memberIds().has(userId) || typeof meta.msgId !== 'string') return;
     const m = msgs.find((x) => x.id === meta.msgId);
     if (m?.file) m.file.pct = norm(pct);
     else
@@ -178,6 +182,7 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
     flush();
   });
   fileAct.onMessage((data, {userId, metadata}) => {
+    if (!memberIds().has(userId)) return;
     const bytes = data as Uint8Array;
     const meta = metadata as unknown as FileMeta;
     const blob = new Blob([new Uint8Array(bytes)], {type: meta.mime});
@@ -199,6 +204,7 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
   });
 
   socialAct.onMessage((payload, ctx) => {
+    if (!memberIds().has(ctx.userId)) return;
     const by = nameOf(ctx.userId);
     if (payload.kind === 'read') social = applyRead(social, by, payload.ids);
     else social = applyReact(social, by, payload.id, payload.emoji);
@@ -244,6 +250,8 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
     decline(userId) {
       const targets = targetsOf(userId);
       if (targets.length) void ctl.send({kind: 'decline'}, {target: targets});
+      // Drop the request row locally too; the joiner gets the wire's declined state.
+      dispatch({type: 'peer-left', userId});
     },
     sendText(raw) {
       const parts = parseSegments(raw);
@@ -276,16 +284,26 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
       msgs = [...msgs, msg];
       flush();
       if (targets.length)
-        void fileAct.send(f, {
-          target: targets,
-          metadata: {msgId, name: f.name, mime: f.type, size: f.size} satisfies FileMeta,
-          onProgress: (pct) => {
+        void fileAct
+          .send(f, {
+            target: targets,
+            metadata: {msgId, name: f.name, mime: f.type, size: f.size} satisfies FileMeta,
+            onProgress: (pct) => {
+              const m = msgs.find((x) => x.id === msgId);
+              if (m?.file) m.file.pct = norm(pct);
+              onPct(norm(pct));
+              flush();
+            },
+          })
+          .then(() => {
+            // Sender's own chip becomes a download when the bytes have moved.
             const m = msgs.find((x) => x.id === msgId);
-            if (m?.file) m.file.pct = norm(pct);
-            onPct(norm(pct));
+            if (m?.file) {
+              m.file.blob = f;
+              m.file.pct = undefined;
+            }
             flush();
-          },
-        });
+          });
     },
     react(id, emoji) {
       social = applyReact(social, myName, id, emoji);
@@ -299,6 +317,7 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
     },
     async leave() {
       if (readTimer) clearTimeout(readTimer);
+      document.removeEventListener('visibilitychange', onVis);
       await room.leave();
     },
   };
