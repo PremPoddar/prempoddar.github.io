@@ -33,39 +33,50 @@ const palette = ['×', '÷', '^', '√', 'π', 'e', 'i', '(', ')', 'sin(', 'cos(
       <button type="button" data-machine="two" aria-pressed="false">Two buttons: 1, EML</button>
     </div>
 
-    <div class="face">
-      <output class="display" data-stack aria-live="polite">0</output>
-      <span class="depth">stack: <span data-depth>0</span></span>
+    <div class="machine">
+      <div class="face">
+        <output class="display" data-stack aria-live="polite">0</output>
+        <span class="depth">stack: <span data-depth>0</span></span>
+      </div>
+      <ul class="tape" data-tape aria-label="Presses so far"></ul>
+      <div class="keys" data-keys></div>
     </div>
     <p class="err" data-calc-error aria-live="polite" hidden></p>
 
-    <ul class="tape" data-tape aria-label="Presses so far"></ul>
-    <div class="keys" data-keys></div>
+    <div class="controls">
+      <button type="button" class="ctl" data-back>Back<small>undo one press</small></button>
+      <button type="button" class="ctl" data-reset>Reset<small>clear the stack</small></button>
+      <form class="load" data-load>
+        <label class="visually-hidden" for="paste-seq">Paste a press sequence</label>
+        <input type="text" id="paste-seq" data-paste placeholder="paste presses, e.g. 1 1 eml" autocomplete="off" spellcheck="false" />
+        <button class="ctl solid" type="submit">Run</button>
+      </form>
+    </div>
     <p class="hint">
-      Keyboard: <kbd>1</kbd> pushes, <kbd>-</kbd> subtracts, <kbd>e</kbd> is exp, <kbd>l</kbd> is ln,
-      <kbd>Enter</kbd> is EML on the two-button machine, <kbd>Backspace</kbd> undoes one press.
-      On the two-button machine, EML(x, y) = e<sup>x</sup> - ln(y): it pops y then x.
+      Copy the presses from the converter, switch to the machine they were made for, and paste them
+      into the Run box to get the same result here. Keyboard: <kbd>1</kbd> pushes, <kbd>-</kbd> subtracts,
+      <kbd>e</kbd> is exp, <kbd>l</kbd> is ln, <kbd>Enter</kbd> is EML on the two-button machine,
+      <kbd>Backspace</kbd> undoes one press. On the two-button machine, EML(x, y) = e<sup>x</sup> - ln(y):
+      it pops y then x.
     </p>
   </section>
 
   <section class="convert" aria-label="Expression to button presses">
     <h2>Type an expression, get the presses</h2>
+    <p class="convert-lede">Compile it for one of the two machines, then copy the presses and paste them into that calculator above with Run.</p>
     <form data-convert>
       <div class="row">
         <label class="expr">
           <span class="visually-hidden">Expression</span>
           <input type="text" data-expr placeholder="sin(30) + √2 × π" autocomplete="off" spellcheck="false" enterkeyhint="go" />
         </label>
-        <button class="go" type="submit">Compile</button>
       </div>
       <div class="row opts">
         <label class="toggle"><input type="checkbox" data-deg /> angles in degrees</label>
-        <label class="toggle">target machine
-          <select data-target>
-            <option value="four">four-button (1, −, exp, ln)</option>
-            <option value="two">two-button (1, EML)</option>
-          </select>
-        </label>
+      </div>
+      <div class="gets" role="group" aria-label="Which machine to compile for">
+        <button class="get" type="submit" data-target="four">Get 4-button presses</button>
+        <button class="get" type="submit" data-target="two">Get 2-button presses</button>
       </div>
       <div class="palette" role="group" aria-label="Insert into the expression">
         {palette.map((t) => <button type="button" data-ins={t}>{t.replace('(', '')}</button>)}
@@ -78,6 +89,7 @@ const palette = ['×', '÷', '^', '√', 'π', 'e', 'i', '(', ')', 'sin(', 'cos(
       <ul class="tape" data-seq-tape aria-label="Compiled press sequence"></ul>
       <div class="seq-foot">
         <button type="button" class="go" data-play>Play</button>
+        <button type="button" class="go" data-copy>Copy</button>
         <output data-seq-result aria-live="polite"></output>
       </div>
     </div>
@@ -124,18 +136,19 @@ const palette = ['×', '÷', '^', '√', 'π', 'e', 'i', '(', ')', 'sin(', 'cos(
   }
   .note code, .ids code { font-family: var(--mono); font-size: 0.9em; }
 
-  .calc {
-    background: var(--mat); border: 1px solid var(--mat-line); border-radius: 6px;
-    padding: 1rem; box-shadow: var(--lift);
-  }
-  .tabs { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+  .calc { margin-top: 1rem; }
+  .tabs { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; max-width: 26rem; }
   .tabs button {
     flex: 1; min-height: 44px; border: 1px solid var(--mat-major); background: var(--paper);
     border-radius: 4px; font: inherit; font-size: var(--step--1); cursor: pointer; color: var(--muted);
   }
   .tabs button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .machine {
+    max-width: 26rem; background: var(--mat); border: 1px solid var(--mat-major);
+    border-radius: 12px; padding: 0.9rem; box-shadow: var(--lift);
+  }
   .face { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
-    background: var(--ink); color: #b8f5c9; border-radius: 4px; padding: 0.7rem 0.9rem; }
+    background: var(--ink); color: #b8f5c9; border-radius: 6px; padding: 0.8rem 1rem; }
   .display { font-family: var(--mono); font-size: var(--step-2); overflow-wrap: anywhere; min-height: 1.4em; }
   .depth { font-size: var(--step--1); opacity: 0.7; white-space: nowrap; }
   .err { color: #a33; font-size: var(--step--1); margin: 0.4rem 0 0; }
@@ -149,31 +162,54 @@ const palette = ['×', '÷', '^', '√', 'π', 'e', 'i', '(', ')', 'sin(', 'cos(
     padding: 0.15rem 0.45rem;
   }
   .chip.now { background: var(--pen-soft); border-color: var(--pen); }
-  .keys { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .keys { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.55rem; margin-top: 0.2rem; }
   .key {
-    min-width: 64px; min-height: 44px; border: 1px solid var(--mat-major); background: var(--paper);
-    border-radius: 4px; cursor: pointer; text-align: center; padding: 0.3rem 0.6rem;
+    min-height: 68px; border: 1px solid var(--mat-major); background: var(--paper);
+    border-radius: 8px; cursor: pointer; text-align: center; padding: 0.45rem 0.6rem;
+    box-shadow: 0 2px 0 var(--mat-major);
   }
-  .key span { display: block; font-family: var(--mono); font-size: var(--step-0); }
+  .key span { display: block; font-family: var(--mono); font-size: var(--step-1); }
   .key small { color: var(--muted); font-size: 0.7rem; }
-  .key:active { background: var(--pen-soft); border-color: var(--pen); }
+  .key:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--mat-major); background: var(--pen-soft); }
+  .controls { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: stretch; margin-top: 0.8rem; max-width: 26rem; }
+  .ctl {
+    min-height: 44px; border: 1px solid var(--mat-major); background: var(--paper);
+    border-radius: 8px; cursor: pointer; padding: 0.2rem 0.9rem; font: inherit;
+    display: inline-flex; flex-direction: column; justify-content: center; line-height: 1.2;
+  }
+  .ctl small { color: var(--muted); font-size: 0.68rem; }
+  .ctl:hover { border-color: var(--pen); }
+  .ctl.solid { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .ctl.solid:hover { background: var(--pen); border-color: var(--pen); }
+  .load { display: flex; gap: 0.4rem; flex: 1; min-width: 15rem; }
+  .load input {
+    flex: 1; min-width: 0; min-height: 44px; font-family: var(--mono); font-size: var(--step--1);
+    border: 1px solid var(--mat-major); border-radius: 8px; padding: 0 0.6rem; background: var(--paper);
+  }
   .hint { color: var(--muted); font-size: var(--step--1); margin: 0.8rem 0 0; }
   kbd { font-family: var(--mono); background: var(--paper); border: 1px solid var(--paper-edge);
     border-radius: 3px; padding: 0 0.3rem; }
 
   .convert { margin-top: 2.2rem; }
   .convert h2 { font-size: var(--step-1); }
+  .convert-lede { color: var(--muted); font-size: var(--step--1); margin: 0.3rem 0 0.8rem; max-width: 52ch; }
   .row { display: flex; gap: 0.5rem; }
   .expr { flex: 1; }
   .expr input {
     width: 100%; min-height: 44px; font-family: var(--mono); font-size: var(--step-0);
     border: 1px solid var(--mat-major); border-radius: 4px; padding: 0 0.7rem; background: var(--paper);
   }
+  .gets { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .get {
+    min-height: 44px; border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+    border-radius: 8px; padding: 0 1.1rem; font: inherit; cursor: pointer;
+  }
+  .get:hover { background: var(--pen); border-color: var(--pen); }
   .go { min-height: 44px; border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
-    border-radius: 4px; padding: 0 1rem; font: inherit; cursor: pointer; }
+    border-radius: 8px; padding: 0 1rem; font: inherit; cursor: pointer; }
   .opts { margin-top: 0.6rem; font-size: var(--step--1); color: var(--muted); flex-wrap: wrap; }
   .toggle { display: inline-flex; align-items: center; gap: 0.35rem; }
-  .toggle select, .toggle input { accent-color: var(--pen); }
+  .toggle input { accent-color: var(--pen); }
   .palette { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.6rem; }
   .palette button {
     min-height: 36px; border: 1px solid var(--paper-edge); background: var(--paper); border-radius: 3px;

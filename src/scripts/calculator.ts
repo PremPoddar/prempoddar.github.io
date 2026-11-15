@@ -32,6 +32,19 @@ function fmt(z: C): string {
   return `${r(z.re)} ${z.im < 0 ? '-' : '+'} ${r(Math.abs(z.im))}i`;
 }
 
+// Turn pasted text like "1 1 - ln exp" or "1 1 eml" back into presses.
+// Accepts the copied labels, commas, the typographic minus and any case.
+function parsePresses(text: string, allowed: Press[], labels: string[]): Press[] {
+  const toks = text.trim().split(/[\s,]+/).filter(Boolean);
+  if (!toks.length) throw new Error('Paste a press sequence first.');
+  if (toks.length > MAX_PRESSES) throw new Error(`That is ${toks.length} presses, over the cap of ${MAX_PRESSES}.`);
+  return toks.map((t) => {
+    const p: Press | undefined = t === '1' ? '1' : t === '-' || t === '−' ? '-' : allowed.find((a) => a === t.toLowerCase());
+    if (!p) throw new Error(`Unknown press "${t}". This machine takes: ${labels.join(', ')}.`);
+    return p;
+  });
+}
+
 export function initCalculator(root: Document = document) {
   const section = root.querySelector<HTMLElement>('[data-calc]');
   if (!section) return;
@@ -86,22 +99,6 @@ export function initCalculator(root: Document = document) {
         b.innerHTML = `<span>${k.label}</span><small>${k.hint}</small>`;
         return b;
       }),
-      (() => {
-        const back = root.createElement('button');
-        back.type = 'button';
-        back.className = 'key wide';
-        back.dataset.back = '';
-        back.innerHTML = '<span>Back</span><small>undo one press</small>';
-        return back;
-      })(),
-      (() => {
-        const reset = root.createElement('button');
-        reset.type = 'button';
-        reset.className = 'key wide';
-        reset.dataset.reset = '';
-        reset.innerHTML = '<span>Reset</span><small>clear the stack</small>';
-        return reset;
-      })(),
     );
   }
 
@@ -143,17 +140,34 @@ export function initCalculator(root: Document = document) {
   buildKeys();
   renderStack();
 
-  // Converter: expression in, press sequence out, with step playback.
+  // Load a sequence made by the converter: paste it under the machine it
+  // was compiled for and run it to land on the same result here.
+  const loadForm = section.querySelector<HTMLFormElement>('[data-load]')!;
+  const pasteIn = loadForm.querySelector<HTMLInputElement>('[data-paste]')!;
+  loadForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    try {
+      presses = parsePresses(pasteIn.value, KEYS[machine].map((k) => k.press), KEYS[machine].map((k) => k.label));
+      pasteIn.value = '';
+      renderStack();
+    } catch (err) {
+      errOut.textContent = (err as Error).message;
+      errOut.hidden = false;
+    }
+  });
+
+  // Converter: expression in, press sequence out, with copy and playback.
   const form = root.querySelector<HTMLFormElement>('[data-convert]')!;
   const input = form.querySelector<HTMLInputElement>('[data-expr]')!;
   const degBox = form.querySelector<HTMLInputElement>('[data-deg]')!;
-  const target = form.querySelector<HTMLSelectElement>('[data-target]')!;
   const seqOut = root.querySelector<HTMLElement>('[data-seq]')!;
   const seqTape = seqOut.querySelector<HTMLElement>('[data-seq-tape]')!;
   const seqInfo = seqOut.querySelector<HTMLElement>('[data-seq-info]')!;
   const playBtn = seqOut.querySelector<HTMLButtonElement>('[data-play]')!;
+  const copyBtn = seqOut.querySelector<HTMLButtonElement>('[data-copy]')!;
   const resultOut = seqOut.querySelector<HTMLElement>('[data-seq-result]')!;
   const convErr = form.querySelector<HTMLElement>('[data-conv-error]')!;
+  const NAMES: Record<MachineName, string> = { four: 'four-button', two: 'two-button' };
 
   let steps: { press: Press; stack: C[] }[] = [];
   let frame = 0;
@@ -209,8 +223,22 @@ export function initCalculator(root: Document = document) {
     frame = requestAnimationFrame(step);
   });
 
+  // Copy the presses so they can be pasted into the matching calculator.
+  copyBtn.addEventListener('click', async () => {
+    if (!steps.length) return;
+    const text = steps.map((s) => LABELS[s.press]).join(' ');
+    try {
+      await navigator.clipboard.writeText(text);
+      copyBtn.textContent = 'Copied';
+    } catch {
+      copyBtn.textContent = 'Copy failed';
+    }
+    setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+  });
+
   form.addEventListener('submit', (e) => {
     e.preventDefault();
+    const machineName = ((e as SubmitEvent).submitter as HTMLButtonElement | null)?.dataset.target === 'two' ? 'two' : 'four';
     cancelAnimationFrame(frame);
     frame = 0;
     playBtn.textContent = 'Play';
@@ -222,9 +250,9 @@ export function initCalculator(root: Document = document) {
     try {
       const ast = desugar(parseExpr(src), degBox.checked);
       const result = evaluate(ast);
-      const compiled = compilePresses(ast, target.value as MachineName);
+      const compiled = compilePresses(ast, machineName);
       const snaps: C[][] = [];
-      executePresses(compiled, target.value as MachineName, (_top, stack) => snaps.push([...stack]));
+      executePresses(compiled, machineName, (_top, stack) => snaps.push([...stack]));
       steps = compiled.map((press, i) => ({ press, stack: snaps[i] }));
       seqTape.replaceChildren(
         ...compiled.map((p) => {
@@ -234,7 +262,7 @@ export function initCalculator(root: Document = document) {
           return li;
         }),
       );
-      seqInfo.textContent = `${compiled.length} presses on the ${target.value === 'four' ? 'four-button' : 'two-button'} machine: ${fmt(result)}`;
+      seqInfo.textContent = `${compiled.length} presses on the ${NAMES[machineName]} machine: ${fmt(result)}`;
       resultOut.textContent = fmt(result);
       seqOut.hidden = false;
     } catch (err) {
