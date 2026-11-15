@@ -43,6 +43,8 @@ type SocialWire = {kind: 'read'; ids: string[]} | {kind: 'react'; id: string; em
 export function startRoom(opts: {code: string; name: string; create: boolean}): ChatHandle {
   const room = joinRoom({appId: APP_ID, password: opts.code, maxUsers: MAX_USERS}, opts.code);
   const profile = room.makeUserState('profile', {name: opts.name});
+  // The initial value is only a fallback; it must be published to reach peers.
+  void profile.set({name: opts.name});
   const ctl = room.makeAction<CtlWire>('ctl');
   const chat = room.makeAction<ChatWire>('chat');
   const fileAct = room.makeAction('file');
@@ -97,11 +99,14 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
     (profile.getAll()[userId] as {name?: string} | undefined)?.name ?? 'Member';
 
   const broadcastRoster = () => {
-    if (roomState.roster) void ctl.send({kind: 'roster', roster: roomState.roster}, {target: memberTargets()});
+    if (!roomState.roster) return;
+    const targets = memberTargets();
+    if (targets.length) void ctl.send({kind: 'roster', roster: roomState.roster}, {target: targets});
   };
 
   const sendSocial = (payload: SocialWire) => {
-    void socialAct.send(payload, {target: memberTargets()});
+    const targets = memberTargets();
+    if (targets.length) void socialAct.send(payload, {target: targets});
   };
 
   const scheduleReads = () => {
@@ -237,14 +242,16 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
       broadcastRoster();
     },
     decline(userId) {
-      void ctl.send({kind: 'decline'}, {target: targetsOf(userId)});
+      const targets = targetsOf(userId);
+      if (targets.length) void ctl.send({kind: 'decline'}, {target: targets});
     },
     sendText(raw) {
       const parts = parseSegments(raw);
       if (!parts.length) return;
       const msg: ChatMessage = {id: crypto.randomUUID(), from: selfId, fromName: myName, ts: Date.now(), mine: true, parts, seenBy: [], reactions: {}};
       msgs = [...msgs, msg];
-      void chat.send({id: msg.id, ts: msg.ts, parts}, {target: memberTargets()});
+      const targets = memberTargets();
+      if (targets.length) void chat.send({id: msg.id, ts: msg.ts, parts}, {target: targets});
       flush();
     },
     sendFile(f, onPct) {
@@ -254,28 +261,31 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
         return;
       }
       const msgId = crypto.randomUUID();
+      const targets = memberTargets();
+      // Nobody to send to (room empty): keep the file locally as its own blob.
       const msg: ChatMessage = {
         id: msgId,
         from: selfId,
         fromName: myName,
         ts: Date.now(),
         mine: true,
-        file: {name: f.name, mime: f.type, size: f.size, pct: 0},
+        file: targets.length ? {name: f.name, mime: f.type, size: f.size, pct: 0} : {name: f.name, mime: f.type, size: f.size, blob: f},
         seenBy: [],
         reactions: {},
       };
       msgs = [...msgs, msg];
       flush();
-      void fileAct.send(f, {
-        target: memberTargets(),
-        metadata: {msgId, name: f.name, mime: f.type, size: f.size} satisfies FileMeta,
-        onProgress: (pct) => {
-          const m = msgs.find((x) => x.id === msgId);
-          if (m?.file) m.file.pct = norm(pct);
-          onPct(norm(pct));
-          flush();
-        },
-      });
+      if (targets.length)
+        void fileAct.send(f, {
+          target: targets,
+          metadata: {msgId, name: f.name, mime: f.type, size: f.size} satisfies FileMeta,
+          onProgress: (pct) => {
+            const m = msgs.find((x) => x.id === msgId);
+            if (m?.file) m.file.pct = norm(pct);
+            onPct(norm(pct));
+            flush();
+          },
+        });
     },
     react(id, emoji) {
       social = applyReact(social, myName, id, emoji);
