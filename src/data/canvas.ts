@@ -29,7 +29,7 @@ export const items: Placement[] = [
   { id: 'brewlight', x: 20, y: 470, w: 310, rotate: 0.8 },
   { id: 'duet', x: 1700, y: 90, w: 260, rotate: 1.2 },
   { id: 'toolbox-board', x: 1280, y: 90, w: 340 },
-  { id: 'fdroid-repo', x: 1035, y: 565, w: 225, rotate: 0.8 },
+  { id: 'fdroid-repo', x: 25, y: 880, w: 400, rotate: -0.5 },
   { id: 'writing', x: 1300, y: 620, w: 300, rotate: 1 },
   { id: 'librechat', x: 1710, y: 590, w: 270, rotate: -1 },
   { id: 'campfire', x: 1720, y: 820, w: 260, rotate: -1.2 },
@@ -41,7 +41,7 @@ export const items: Placement[] = [
 
 export const notes: Note[] = [
   { id: 'note-offline', text: 'LibreChat, Loadstone and Campfire all work with no internet at all.', x: 1980, y: 600, rotate: 3 },
-  { id: 'note-help', text: 'Drag to move around the desk. Pinch, or hold Ctrl and scroll, to zoom.', x: 1690, y: 408, rotate: -3, desktopOnly: true },
+  { id: 'note-help', text: 'Drag to move around the desk. Pinch, or hold Ctrl and scroll, to zoom.', x: 1040, y: 570, rotate: -3, desktopOnly: true },
   { id: 'note-caffeinate', text: 'Flip the switch. It really does keep this screen awake.', x: 380, y: 720, rotate: 4 },
 ];
 
