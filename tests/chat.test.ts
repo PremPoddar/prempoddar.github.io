@@ -1,6 +1,13 @@
 import {describe, expect, it} from 'vitest';
 import {ADJECTIVES, ANIMALS, NOUNS, randomName, roomCode} from '../src/lib/chat/words';
 import {MAX_FILE_BYTES, fileTooBig, linkTokens, parseSegments} from '../src/lib/chat/message';
+import {
+  type RoomState,
+  type Roster,
+  nextOwnerAfterLeave,
+  reduceRoom,
+  roleOf,
+} from '../src/lib/chat/room-model';
 
 describe('chat words', () => {
   it('makes three-word codes from the noun list', () => {
@@ -61,5 +68,88 @@ describe('message shaping', () => {
     expect(fileTooBig(26214400)).toBe(false);
     expect(fileTooBig(26214401)).toBe(true);
     expect(MAX_FILE_BYTES).toBe(25 * 1024 * 1024);
+  });
+});
+
+describe('room roster', () => {
+  const base: RoomState = {roster: null, pending: [], connected: [], declined: false};
+  const mk = (owner: string, rest: string[] = []): Roster => ({
+    ownerId: owner,
+    members: [owner, ...rest].map((id, i) => ({userId: id, name: 'N' + id.slice(2), order: i + 1})),
+  });
+
+  it('first roster wins', () => {
+    const s = reduceRoom(base, {type: 'roster', roster: mk('u-a'), from: 'u-a'});
+    expect(s.roster).toEqual(mk('u-a'));
+  });
+  it('rejects a roster from a non-owner', () => {
+    const s1 = reduceRoom(base, {type: 'roster', roster: mk('u-a', ['u-b']), from: 'u-a'});
+    const s2 = reduceRoom(s1, {type: 'roster', roster: mk('u-c'), from: 'u-c'});
+    expect(s2.roster).toEqual(s1.roster);
+  });
+  it('rejects unordered or duplicate rosters', () => {
+    const bad: Roster = {
+      ownerId: 'u-a',
+      members: [{userId: 'u-a', name: 'A', order: 2}, {userId: 'u-b', name: 'B', order: 1}],
+    };
+    expect(reduceRoom(base, {type: 'roster', roster: bad, from: 'u-a'}).roster).toBeNull();
+    const dup: Roster = {
+      ownerId: 'u-a',
+      members: [{userId: 'u-a', name: 'A', order: 1}, {userId: 'u-a', name: 'A2', order: 2}],
+    };
+    expect(reduceRoom(base, {type: 'roster', roster: dup, from: 'u-a'}).roster).toBeNull();
+  });
+  it('accept flow: stranger pends, roster admits them', () => {
+    const owner = reduceRoom(base, {type: 'peer-joined', userId: 'u-x', name: 'X Ray'});
+    expect(owner.pending).toEqual([{userId: 'u-x', name: 'X Ray'}]);
+    const s2 = reduceRoom(owner, {type: 'roster', roster: mk('u-a', ['u-x']), from: 'u-a'});
+    expect(s2.pending).toEqual([]);
+    expect(roleOf(s2, 'u-a')).toBe('owner');
+    const j = reduceRoom(
+      reduceRoom(base, {type: 'peer-joined', userId: 'u-a', name: 'A'}),
+      {type: 'roster', roster: mk('u-a', ['u-me']), from: 'u-a'},
+    );
+    expect(roleOf(j, 'u-me')).toBe('member');
+  });
+  it('decline clears pending on departure and marks the joiner declined', () => {
+    const owner = reduceRoom(base, {type: 'peer-joined', userId: 'u-x', name: 'X'});
+    const withRoster = reduceRoom(owner, {type: 'roster', roster: mk('u-a'), from: 'u-a'});
+    const gone = reduceRoom(withRoster, {type: 'peer-left', userId: 'u-x'});
+    expect(gone.pending).toEqual([]);
+    expect(roleOf(reduceRoom(base, {type: 'declined-self'}), 'u-me')).toBe('declined');
+  });
+  it('owner leaving promotes the first remaining member', () => {
+    let s = reduceRoom(base, {type: 'roster', roster: mk('u-a', ['u-b', 'u-me']), from: 'u-a'});
+    s = reduceRoom(s, {type: 'peer-left', userId: 'u-a'});
+    expect(s.roster!.ownerId).toBe('u-b');
+    expect(s.roster!.members.map((m) => m.userId)).toEqual(['u-b', 'u-me']);
+    expect(reduceRoom(s, {type: 'roster', roster: mk('u-b', ['u-me']), from: 'u-b'}).roster!.ownerId).toBe('u-b');
+    expect(reduceRoom(s, {type: 'roster', roster: mk('u-a'), from: 'u-a'}).roster).toEqual(s.roster);
+    expect(nextOwnerAfterLeave(mk('u-a', ['u-b', 'u-me']), 'u-a').ownerId).toBe('u-b');
+  });
+  it('a regular member dropping out stays in the roster (refresh)', () => {
+    let s = reduceRoom(base, {type: 'roster', roster: mk('u-a', ['u-me', 'u-b']), from: 'u-a'});
+    s = reduceRoom(s, {type: 'peer-left', userId: 'u-me'});
+    expect(s.roster!.members.map((m) => m.userId)).toEqual(['u-a', 'u-me', 'u-b']);
+    s = reduceRoom(s, {type: 'peer-joined', userId: 'u-me', name: 'Nme'});
+    expect(roleOf(s, 'u-me')).toBe('member');
+  });
+  it('rename updates roster and pending names', () => {
+    let s = reduceRoom(base, {type: 'roster', roster: mk('u-a', ['u-b']), from: 'u-a'});
+    s = reduceRoom(s, {type: 'rename', userId: 'u-b', name: 'New Name'});
+    expect(s.roster!.members[1].name).toBe('New Name');
+    const p = reduceRoom(
+      reduceRoom(base, {type: 'peer-joined', userId: 'u-x', name: 'X'}),
+      {type: 'rename', userId: 'u-x', name: 'X2'},
+    );
+    expect(p.pending[0].name).toBe('X2');
+  });
+  it('roleOf covers waiting, pending, owner, member, declined', () => {
+    expect(roleOf(base, 'u-me')).toBe('waiting');
+    expect(roleOf(reduceRoom(base, {type: 'peer-joined', userId: 'u-a', name: 'A'}), 'u-me')).toBe('pending');
+    const r = reduceRoom(base, {type: 'roster', roster: mk('u-a', ['u-me']), from: 'u-a'});
+    expect(roleOf(r, 'u-a')).toBe('owner');
+    expect(roleOf(r, 'u-me')).toBe('member');
+    expect(roleOf(reduceRoom(base, {type: 'declined-self'}), 'u-me')).toBe('declined');
   });
 });
