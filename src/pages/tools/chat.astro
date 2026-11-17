@@ -36,7 +36,7 @@ const claims =
                 <div class="fmeta"><div class="fnm">Name</div><div class="fsz">size</div></div>
                 <div class="fbtns"><a class="fbtn">Open (displayable types only)</a>
                 <a class="fbtn">Download</a></div></div> or <progress> while moving</div>
-        then:   <p class="seen">Seen by ...</p>
+        then (own msgs only):  <span class="ticks [read]">tick svg</span>
                 <div class="reacts"><button aria-pressed>emoji</button>...</div>
   -->
   <section class="chatwrap" aria-label="No-trace chat room">
@@ -234,7 +234,13 @@ const claims =
   }
   .filecard .fbtn:hover { border-color: var(--pen); }
   .filechip progress { width: 100%; height: 8px; accent-color: var(--pen); max-width: 92%; display: block; }
-  .seen { font-size: 0.66rem; color: var(--muted); margin: 0.2rem 0 0; }
+  .msg .ticks { display: inline-flex; margin: 0.2rem 0 0; }
+  .msg .ticks svg { width: 1.05rem; height: 0.72rem; }
+  .msg .ticks path {
+    fill: none; stroke: var(--muted); stroke-width: 1.7;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .msg .ticks.read path { stroke: #34b7f1; }
   .reacts { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.3rem; }
   .reacts button {
     min-height: 28px; border: 1px solid var(--paper-edge); background: var(--paper); border-radius: 4px;

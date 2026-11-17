@@ -54,6 +54,18 @@ const extOf = (name: string) => {
   return /^[A-Z0-9]{1,5}$/.test(e) ? e : 'FILE';
 };
 
+// Delivery ticks for own messages: 'one' sent, 'out' received, 'read' seen by
+// everyone else. The wire has no per-message ack, so "received" means another
+// roster member is currently connected, the closest honest P2P signal.
+type TickCtx = {others: number; online: number};
+const tickState = (m: ChatMessage, ctx: TickCtx) =>
+  !m.mine ? '' : ctx.others > 0 && m.seenBy.length >= ctx.others ? 'read' : ctx.online > 0 ? 'out' : 'one';
+
+const tickSvg = (state: string) =>
+  state === 'one'
+    ? '<svg viewBox="0 0 15 12" aria-hidden="true"><path d="M1 6.7 4.7 10.2 13.5 1.5"/></svg>'
+    : '<svg viewBox="0 0 22 12" aria-hidden="true"><path d="M1 6.7 4.7 10.2 13.5 1.5"/><path d="M8.2 6.7 11.9 10.2 20.7 1.5"/></svg>';
+
 export function initChat() {
   const landing = $<HTMLElement>('[data-landing]');
   const roomView = $<HTMLElement>('[data-room]');
@@ -303,8 +315,8 @@ export function initChat() {
   // a message li; social-only changes (receipts, reactions) are patched in.
   let renderedRoom = '';
 
-  const socialSig = (m: ChatMessage) =>
-    m.seenBy.join('|') + '#' + REACTIONS.map((e) => `${e}${(m.reactions[e] ?? []).length}`).join('.');
+  const socialSig = (m: ChatMessage, ctx: TickCtx) =>
+    tickState(m, ctx) + '#' + m.seenBy.join('|') + '#' + REACTIONS.map((e) => `${e}${(m.reactions[e] ?? []).length}`).join('.');
 
   const mediaSig = (m: ChatMessage) => (m.file ? `${m.file.pct ?? 1}:${m.file.blob ? 'b' : 'p'}` : '');
 
@@ -340,20 +352,12 @@ export function initChat() {
     return bar;
   };
 
-  const updateSocial = (li: HTMLLIElement, m: ChatMessage) => {
-    const seen = li.querySelector('.seen');
-    if (m.seenBy.length) {
-      const text = `Seen by ${m.seenBy.join(', ')}`;
-      if (seen) seen.textContent = text;
-      else {
-        const p = el('p', 'seen');
-        p.textContent = text;
-        const bar = li.querySelector('.reacts');
-        if (bar) bar.before(p);
-        else li.append(p);
-      }
-    } else if (seen) {
-      seen.remove();
+  const updateSocial = (li: HTMLLIElement, m: ChatMessage, ctx: TickCtx) => {
+    const ticks = li.querySelector('.ticks');
+    if (ticks) {
+      const state = tickState(m, ctx);
+      ticks.className = 'ticks' + (state === 'read' ? ' read' : '');
+      ticks.innerHTML = tickSvg(state);
     }
     const bar = li.querySelector('.reacts');
     const fresh = buildReacts(m);
@@ -364,6 +368,13 @@ export function initChat() {
   function render(snap: Snapshot) {
     lastSnap = snap;
     const room = snap.room;
+
+    // Ticks need the roster context: how many others exist, how many online.
+    const memberSet = new Set((room.roster?.members ?? []).map((mm) => mm.userId));
+    const ctx: TickCtx = {
+      others: Math.max((room.roster?.members.length ?? 0) - 1, 0),
+      online: room.connected.filter((id) => memberSet.has(id)).length,
+    };
 
     // Members, owner tagged.
     membersList.replaceChildren(
@@ -439,22 +450,22 @@ export function initChat() {
       }
       const ms = mediaSig(m);
       if (li.dataset.media !== ms) {
-        const fresh = renderMsg(m);
+        const fresh = renderMsg(m, ctx);
         fresh.dataset.id = m.id;
         fresh.dataset.media = ms;
-        fresh.dataset.social = socialSig(m);
+        fresh.dataset.social = socialSig(m, ctx);
         li.replaceWith(fresh);
-      } else if (li.dataset.social !== socialSig(m)) {
-        updateSocial(li, m);
-        li.dataset.social = socialSig(m);
+      } else if (li.dataset.social !== socialSig(m, ctx)) {
+        updateSocial(li, m, ctx);
+        li.dataset.social = socialSig(m, ctx);
       }
     }
     for (; i < snap.msgs.length; i++) {
       const m = snap.msgs[i];
-      const li = renderMsg(m);
+      const li = renderMsg(m, ctx);
       li.dataset.id = m.id;
       li.dataset.media = mediaSig(m);
-      li.dataset.social = socialSig(m);
+      li.dataset.social = socialSig(m, ctx);
       msgsList.append(li);
     }
     if (kids.length > snap.msgs.length) {
@@ -463,7 +474,7 @@ export function initChat() {
     if (stick) msgsList.scrollTop = msgsList.scrollHeight;
   }
 
-  function renderMsg(m: ChatMessage): HTMLLIElement {
+  function renderMsg(m: ChatMessage, ctx: TickCtx): HTMLLIElement {
     const li = el('li', 'msg' + (m.mine ? ' mine' : ''));
     const who = el('p', 'who');
     const b = el('b');
@@ -604,10 +615,11 @@ export function initChat() {
       li.append(chip);
     }
 
-    if (m.seenBy.length) {
-      const seen = el('p', 'seen');
-      seen.textContent = `Seen by ${m.seenBy.join(', ')}`;
-      li.append(seen);
+    const state = tickState(m, ctx);
+    if (state) {
+      const ticks = el('span', 'ticks' + (state === 'read' ? ' read' : ''));
+      ticks.innerHTML = tickSvg(state);
+      li.append(ticks);
     }
 
     li.append(buildReacts(m));
