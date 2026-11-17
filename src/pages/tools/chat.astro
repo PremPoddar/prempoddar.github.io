@@ -153,8 +153,14 @@ const claims =
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .bar .ctl { min-height: 40px; padding: 0.2rem 0.7rem; }
-  .bar .copy-link { flex-direction: row; align-items: center; gap: 0.35rem; }
-  .bar .copy-link svg { width: 0.95rem; height: 0.95rem; }
+  .bar .copy-link {
+    flex-direction: row; align-items: center; gap: 0.4rem;
+    min-height: 38px; padding: 0 0.95rem; border-radius: 999px;
+    background: var(--ink); color: var(--paper); border-color: var(--ink);
+    font-weight: 500;
+  }
+  .bar .copy-link:hover { background: var(--pen); border-color: var(--pen); }
+  .bar .copy-link svg { width: 1rem; height: 1rem; }
 
   .requests {
     border: 1px dashed var(--pen); background: var(--note); color: var(--note-ink);
@@ -295,8 +301,7 @@ const claims =
   /* In a room the chat takes the whole page; everything else steps aside. */
   body[data-chat-view='room'] .intro,
   body[data-chat-view='room'] .landing,
-  body[data-chat-view='room'] .how,
-  body[data-chat-view='room'] .topbar { display: none; }
+  body[data-chat-view='room'] .how { display: none; }
   body[data-chat-view='room'] .chatwrap { margin-top: 0; }
 </style>
 <style is:global>
@@ -304,7 +309,7 @@ const claims =
      little chrome above the panel as possible. */
   body[data-chat-view='room'] main.sheet {
     max-width: 74rem;
-    margin: 0;
+    margin: 0 auto;
     padding: 0.3rem clamp(0.8rem, 2vw, 1.5rem) 0.25rem;
   }
 
