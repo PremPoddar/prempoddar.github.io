@@ -4,7 +4,7 @@
 import {joinRoom} from '@trystero-p2p/torrent';
 import {MAX_FILE_BYTES, fileTooBig, parseSegments, type Segment} from './message';
 import {type Role, type RoomState, type Roster, reduceRoom, roleOf} from './room-model';
-import {applyRead, applyReact, emptySocial} from './social';
+import {applyRead, emptySocial} from './social';
 
 export type ChatMessage = {
   id: string;
@@ -15,7 +15,6 @@ export type ChatMessage = {
   parts?: Segment[];
   file?: {name: string; mime: string; size: number; blob?: Blob; pct?: number};
   seenBy: string[];
-  reactions: Record<string, string[]>;
 };
 
 export type Snapshot = {room: RoomState; role: Role; msgs: ChatMessage[]; error?: string};
@@ -26,7 +25,6 @@ export type ChatHandle = {
   decline: (userId: string) => void;
   sendText: (raw: string) => void;
   sendFile: (f: File, onPct: (p: number) => void) => void;
-  react: (id: string, emoji: string) => void;
   setName: (name: string) => void;
   leave: () => Promise<void>;
 };
@@ -38,7 +36,7 @@ const norm = (pct: number) => (pct > 1 ? pct / 100 : pct);
 type CtlWire = {kind: 'roster'; roster: Roster} | {kind: 'decline'};
 type ChatWire = {id: string; ts: number; parts: Segment[]};
 type FileMeta = {msgId: string; name: string; mime: string; size: number};
-type SocialWire = {kind: 'read'; ids: string[]} | {kind: 'react'; id: string; emoji: string};
+type SocialWire = {kind: 'read'; ids: string[]};
 
 export function startRoom(opts: {code: string; name: string; create: boolean}): ChatHandle {
   const room = joinRoom({appId: APP_ID, password: opts.code, maxUsers: MAX_USERS}, opts.code);
@@ -69,7 +67,6 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
       msgs: msgs.map((m) => ({
         ...m,
         seenBy: social.seen[m.id] ?? [],
-        reactions: {...(social.reactions[m.id] ?? {})},
       })),
     };
     for (const fn of subs) fn(snap);
@@ -155,7 +152,7 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
     if (!memberIds().has(ctx.userId)) return;
     msgs = [
       ...msgs,
-      {id: payload.id, from: ctx.userId, fromName: nameOf(ctx.userId), ts: payload.ts, mine: ctx.userId === selfId, parts: payload.parts, seenBy: [], reactions: {}},
+      {id: payload.id, from: ctx.userId, fromName: nameOf(ctx.userId), ts: payload.ts, mine: ctx.userId === selfId, parts: payload.parts, seenBy: []},
     ];
     flush();
   });
@@ -176,7 +173,6 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
           ts: Date.now(),
           mine: false,
           seenBy: [],
-          reactions: {},
           file: {name: meta.name, mime: meta.mime, size: meta.size, pct: norm(pct)},
         },
       ];
@@ -197,7 +193,6 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
           ts: Date.now(),
           mine: userId === selfId,
           seenBy: [],
-          reactions: {},
           file: {name: meta.name, mime: meta.mime, size: meta.size, blob},
         };
     msgs = m ? msgs.map((x) => (x.id === meta.msgId ? done : x)) : [...msgs, done];
@@ -208,7 +203,6 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
     if (!memberIds().has(ctx.userId)) return;
     const by = nameOf(ctx.userId);
     if (payload.kind === 'read') social = applyRead(social, by, payload.ids);
-    else social = applyReact(social, by, payload.id, payload.emoji);
     flush();
   });
 
@@ -257,7 +251,7 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
     sendText(raw) {
       const parts = parseSegments(raw);
       if (!parts.length) return;
-      const msg: ChatMessage = {id: crypto.randomUUID(), from: selfId, fromName: myName, ts: Date.now(), mine: true, parts, seenBy: [], reactions: {}};
+      const msg: ChatMessage = {id: crypto.randomUUID(), from: selfId, fromName: myName, ts: Date.now(), mine: true, parts, seenBy: []};
       msgs = [...msgs, msg];
       const targets = memberTargets();
       if (targets.length) void chat.send({id: msg.id, ts: msg.ts, parts}, {target: targets});
@@ -280,7 +274,6 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
         mine: true,
         file: targets.length ? {name: f.name, mime: f.type, size: f.size, pct: 0} : {name: f.name, mime: f.type, size: f.size, blob: f},
         seenBy: [],
-        reactions: {},
       };
       msgs = [...msgs, msg];
       flush();
@@ -305,11 +298,6 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
             }
             flush();
           });
-    },
-    react(id, emoji) {
-      social = applyReact(social, myName, id, emoji);
-      sendSocial({kind: 'react', id, emoji});
-      flush();
     },
     setName(name) {
       myName = name;

@@ -8,7 +8,7 @@ import {
   reduceRoom,
   roleOf,
 } from '../src/lib/chat/room-model';
-import {applyReact, applyRead, emptySocial} from '../src/lib/chat/social';
+import {applyRead, emptySocial} from '../src/lib/chat/social';
 
 describe('chat words', () => {
   it('makes three-word codes from the noun list', () => {
@@ -163,19 +163,5 @@ describe('social', () => {
     s = applyRead(s, 'Amber', ['m1']);
     expect(s.seen.m1).toEqual(['Amber', 'Devi']);
     expect(s.seen.m2).toEqual(['Devi']);
-  });
-  it('toggles a reaction', () => {
-    let s = emptySocial();
-    s = applyReact(s, 'Amber', 'm1', '👍');
-    expect(s.reactions.m1['👍']).toEqual(['Amber']);
-    s = applyReact(s, 'Amber', 'm1', '👍');
-    expect(s.reactions.m1['👍']).toEqual([]);
-  });
-  it('keeps reactions per emoji', () => {
-    let s = emptySocial();
-    s = applyReact(s, 'A', 'm1', '👍');
-    s = applyReact(s, 'B', 'm1', '🎉');
-    expect(s.reactions.m1['👍']).toEqual(['A']);
-    expect(s.reactions.m1['🎉']).toEqual(['B']);
   });
 });

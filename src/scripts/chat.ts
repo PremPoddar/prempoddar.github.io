@@ -3,7 +3,6 @@
 
 import {fileTooBig, linkTokens} from '../lib/chat/message';
 import {type ChatHandle, type ChatMessage, type Snapshot, startRoom} from '../lib/chat/room';
-import {REACTIONS} from '../lib/chat/social';
 import {randomName, roomCode} from '../lib/chat/words';
 
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector(sel) as T;
@@ -310,49 +309,14 @@ export function initChat() {
     stick = msgsList.scrollHeight - msgsList.scrollTop - msgsList.clientHeight < 40;
   });
 
-  // A click anywhere outside a message closes any open reaction picker.
-  document.addEventListener('click', (e) => {
-    if ((e.target as HTMLElement).closest?.('.msg')) return;
-    for (const bar of msgsList.querySelectorAll('.reacts.open')) bar.classList.remove('open');
-  });
-
   // Messages are built once and never torn down wholesale: flushes must not
   // restart a video or audio the user is playing. Media state changes replace
-  // a message li; social-only changes (receipts, reactions) are patched in.
+  // a message li; social-only changes (receipts) are patched in.
   let renderedRoom = '';
 
-  const socialSig = (m: ChatMessage, ctx: TickCtx) =>
-    tickState(m, ctx) + '#' + m.seenBy.join('|') + '#' + REACTIONS.map((e) => `${e}${(m.reactions[e] ?? []).length}`).join('.');
+  const socialSig = (m: ChatMessage, ctx: TickCtx) => tickState(m, ctx) + '#' + m.seenBy.join('|');
 
   const mediaSig = (m: ChatMessage) => (m.file ? `${m.file.pct ?? 1}:${m.file.blob ? 'b' : 'p'}` : '');
-
-  const buildReacts = (m: ChatMessage) => {
-    const bar = el('div', 'reacts');
-    for (const emoji of REACTIONS.filter((e) => (m.reactions[e] ?? []).length > 0)) {
-      const names = m.reactions[emoji] ?? [];
-      const chipBtn = el('button');
-      chipBtn.type = 'button';
-      chipBtn.textContent = `${emoji} ×${names.length}`;
-      chipBtn.title = names.join(', ');
-      chipBtn.setAttribute('aria-pressed', String(names.includes(myName)));
-      chipBtn.addEventListener('click', () => handle?.react(m.id, emoji));
-      bar.append(chipBtn);
-    }
-    // No + button; the picker opens by clicking or holding the message itself.
-    const picker = el('span', 'picker');
-    for (const emoji of REACTIONS) {
-      const pb = el('button');
-      pb.type = 'button';
-      pb.textContent = emoji;
-      pb.addEventListener('click', () => {
-        handle?.react(m.id, emoji);
-        bar.classList.remove('open');
-      });
-      picker.append(pb);
-    }
-    bar.append(picker);
-    return bar;
-  };
 
   const updateSocial = (li: HTMLLIElement, m: ChatMessage, ctx: TickCtx) => {
     const ticks = li.querySelector('.ticks');
@@ -361,10 +325,6 @@ export function initChat() {
       ticks.className = 'ticks' + (state === 'read' ? ' read' : '');
       ticks.innerHTML = tickSvg(state);
     }
-    const bar = li.querySelector('.reacts');
-    const fresh = buildReacts(m);
-    if (bar) bar.replaceWith(fresh);
-    else li.append(fresh);
   };
 
   function render(snap: Snapshot) {
@@ -624,57 +584,6 @@ export function initChat() {
       li.append(ticks);
     }
 
-    // Click or press-and-hold the message to open its reaction picker. Clicks
-    // on links, buttons, media and the bar itself belong to those elements.
-    let held = false;
-    let holdTimer: number | undefined;
-    const guarded = (e: Event) => {
-      const t = e.target as HTMLElement;
-      return !!t.closest?.('a, button, video, audio, iframe, textarea, input, .reacts');
-    };
-    const openPicker = (force: boolean) => {
-      const bar = li.querySelector('.reacts');
-      if (!bar) return;
-      for (const other of msgsList.querySelectorAll('.reacts.open')) {
-        if (other !== bar) other.classList.remove('open');
-      }
-      if (force) bar.classList.add('open');
-      else bar.classList.toggle('open');
-    };
-    li.addEventListener('click', (e) => {
-      if (held) {
-        held = false;
-        e.preventDefault();
-        return;
-      }
-      if (guarded(e)) return;
-      openPicker(false);
-    });
-    li.addEventListener('touchstart', () => {
-      held = false;
-      holdTimer = window.setTimeout(() => {
-        holdTimer = undefined;
-        held = true;
-        openPicker(true);
-      }, 450);
-    }, {passive: true});
-    const cancelHold = () => {
-      if (holdTimer !== undefined) {
-        clearTimeout(holdTimer);
-        holdTimer = undefined;
-      }
-    };
-    li.addEventListener('touchend', cancelHold, {passive: true});
-    li.addEventListener('touchmove', cancelHold, {passive: true});
-    li.addEventListener('touchcancel', cancelHold, {passive: true});
-    li.addEventListener('contextmenu', (e) => {
-      if (guarded(e)) return;
-      // Android long-press and desktop right-click route through here.
-      e.preventDefault();
-      openPicker(true);
-    });
-
-    li.append(buildReacts(m));
     return li;
   }
 
