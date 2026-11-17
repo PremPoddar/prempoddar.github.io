@@ -64,8 +64,10 @@ const claims =
         <ul class="members" data-members></ul>
         <div class="bar-actions">
           <output class="linkout" data-link></output>
-          <button type="button" class="ctl" data-copy-link>Copy link</button>
-          <button type="button" class="ctl" data-leave>Leave</button>
+          <button type="button" class="ctl copy-link" data-copy-link title="Copy the room link">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            <span class="lbl">Copy link</span>
+          </button>
         </div>
       </div>
       <div class="requests" data-requests hidden></div>
@@ -151,6 +153,8 @@ const claims =
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .bar .ctl { min-height: 40px; padding: 0.2rem 0.7rem; }
+  .bar .copy-link { flex-direction: row; align-items: center; gap: 0.35rem; }
+  .bar .copy-link svg { width: 0.95rem; height: 0.95rem; }
 
   .requests {
     border: 1px dashed var(--pen); background: var(--note); color: var(--note-ink);
@@ -291,7 +295,8 @@ const claims =
   /* In a room the chat takes the whole page; everything else steps aside. */
   body[data-chat-view='room'] .intro,
   body[data-chat-view='room'] .landing,
-  body[data-chat-view='room'] .how { display: none; }
+  body[data-chat-view='room'] .how,
+  body[data-chat-view='room'] .topbar { display: none; }
   body[data-chat-view='room'] .chatwrap { margin-top: 0; }
 </style>
 <style is:global>
@@ -299,8 +304,8 @@ const claims =
      little chrome above the panel as possible. */
   body[data-chat-view='room'] main.sheet {
     max-width: 74rem;
-    margin: 0.5rem auto 0;
-    padding: 0.6rem clamp(0.8rem, 2vw, 1.5rem) 0.4rem;
+    margin: 0;
+    padding: 0.3rem clamp(0.8rem, 2vw, 1.5rem) 0.25rem;
   }
 
   @media (max-width: 640px) {

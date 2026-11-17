@@ -13,11 +13,14 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string): HTMLEl
 };
 
 // Same copy path as the calculator: clipboard API first, execCommand fallback.
+// Buttons that carry an icon keep their label in a .lbl span; plain buttons
+// are their own label.
 function copyText(text: string, btn: HTMLButtonElement, label = 'Copy') {
+  const lbl = (btn.querySelector('.lbl') as HTMLElement | null) ?? btn;
   const done = (ok: boolean) => {
-    btn.textContent = ok ? 'Copied' : 'Copy failed';
+    lbl.textContent = ok ? 'Copied' : 'Copy failed';
     setTimeout(() => {
-      btn.textContent = label;
+      lbl.textContent = label;
     }, 1500);
   };
   navigator.clipboard.writeText(text).then(
@@ -82,7 +85,6 @@ export function initChat() {
   const fileInput = $<HTMLInputElement>('[data-file]');
   const sendBtn = $<HTMLButtonElement>('[data-send]');
   const stagedBox = $<HTMLElement>('[data-staged]');
-  const leaveBtn = $<HTMLButtonElement>('[data-leave]');
   const errorBanner = $<HTMLElement>('[data-error]');
   const statusBanner = $<HTMLElement>('[data-status]');
   const landingErr = $<HTMLElement>('[data-error-landing]');
@@ -141,7 +143,7 @@ export function initChat() {
   const fitRoom = () => {
     if (roomView.hidden) return;
     const top = roomView.getBoundingClientRect().top + window.scrollY;
-    roomView.style.height = `${Math.max(300, window.innerHeight - top - 20)}px`;
+    roomView.style.height = `${Math.max(300, window.innerHeight - top - 8)}px`;
   };
   window.addEventListener('resize', fitRoom);
   // Font swaps shift the chrome above the panel; measure again once loaded.
@@ -189,24 +191,6 @@ export function initChat() {
   });
 
   copyLinkBtn.addEventListener('click', () => copyText(linkOut.textContent ?? '', copyLinkBtn));
-
-  leaveBtn.addEventListener('click', async () => {
-    await handle?.leave();
-    unsub?.();
-    unsub = null;
-    handle = null;
-    lastSnap = null;
-    for (const url of fileUrls.values()) URL.revokeObjectURL(url);
-    fileUrls.clear();
-    for (const s of staged) if (s.url) URL.revokeObjectURL(s.url);
-    staged = [];
-    renderStaged();
-    code = '';
-    // Leaving a room puts the full landing back, create included.
-    createBtn.hidden = false;
-    joinBtn.classList.add('ghost');
-    showLanding();
-  });
 
   const send = () => {
     const raw = compose.value;
