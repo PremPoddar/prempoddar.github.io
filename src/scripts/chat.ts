@@ -88,7 +88,10 @@ export function initChat() {
   nameInput.value = myName;
   codeInput.value = location.hash.slice(1);
   // A join link means joining is the only move.
-  createBtn.hidden = Boolean(location.hash.slice(1));
+  if (location.hash.slice(1)) {
+    createBtn.hidden = true;
+    joinBtn.classList.remove('ghost');
+  }
 
   const showError = (text: string) => {
     // Errors go to the banner of the view you are on.
@@ -119,9 +122,6 @@ export function initChat() {
     setStatus(null);
     errorBanner.hidden = true;
     history.replaceState(null, '', location.pathname);
-    createBtn.hidden = Boolean(location.hash.slice(1));
-    if (createBtn.hidden) joinBtn.classList.remove('ghost');
-    else joinBtn.classList.add('ghost');
     if (focus) nameInput.focus();
   };
 
@@ -189,6 +189,9 @@ export function initChat() {
     staged = [];
     renderStaged();
     code = '';
+    // Leaving a room puts the full landing back, create included.
+    createBtn.hidden = false;
+    joinBtn.classList.add('ghost');
     showLanding();
   });
 
