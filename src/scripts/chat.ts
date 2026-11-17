@@ -63,6 +63,7 @@ export function initChat() {
   const leaveBtn = $<HTMLButtonElement>('[data-leave]');
   const errorBanner = $<HTMLElement>('[data-error]');
   const statusBanner = $<HTMLElement>('[data-status]');
+  const landingErr = $<HTMLElement>('[data-error-landing]');
 
   let handle: ChatHandle | null = null;
   let unsub: (() => void) | null = null;
@@ -76,11 +77,16 @@ export function initChat() {
   codeInput.value = location.hash.slice(1);
 
   const showError = (text: string) => {
-    errorBanner.textContent = text;
-    errorBanner.hidden = false;
+    // Errors go to the banner of the view you are on.
+    const err = landing.hidden ? errorBanner : landingErr;
+    err.textContent = text;
+    err.hidden = false;
   };
   errorBanner.addEventListener('click', () => {
     errorBanner.hidden = true;
+  });
+  landingErr.addEventListener('click', () => {
+    landingErr.hidden = true;
   });
 
   const setStatus = (text: string | null) => {
@@ -97,16 +103,17 @@ export function initChat() {
     roomView.hidden = true;
     document.body.dataset.chatView = 'landing';
     setStatus(null);
+    errorBanner.hidden = true;
     history.replaceState(null, '', location.pathname);
     if (focus) nameInput.focus();
   };
 
-  // Fill the viewport below the chat header with the panel, whatever the
-  // nav or padding above it happens to be.
+  // Fill the viewport with the panel, whatever chrome sits above it. The
+  // banners live inside the panel, so its top in the document never moves.
   const fitRoom = () => {
     if (roomView.hidden) return;
-    const top = roomView.getBoundingClientRect().top;
-    roomView.style.height = `${Math.max(380, window.innerHeight - top - 20)}px`;
+    const top = roomView.getBoundingClientRect().top + window.scrollY;
+    roomView.style.height = `${Math.max(300, window.innerHeight - top - 20)}px`;
   };
   window.addEventListener('resize', fitRoom);
 
@@ -129,6 +136,7 @@ export function initChat() {
     }
     code = create ? roomCode() : codeInput.value.trim().toLowerCase();
     errorBanner.hidden = true;
+    landingErr.hidden = true;
     unsub?.();
     handle?.leave();
     handle = startRoom({code, name, create});
