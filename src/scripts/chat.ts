@@ -310,6 +310,12 @@ export function initChat() {
     stick = msgsList.scrollHeight - msgsList.scrollTop - msgsList.clientHeight < 40;
   });
 
+  // A click anywhere outside a message closes any open reaction picker.
+  document.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest?.('.msg')) return;
+    for (const bar of msgsList.querySelectorAll('.reacts.open')) bar.classList.remove('open');
+  });
+
   // Messages are built once and never torn down wholesale: flushes must not
   // restart a video or audio the user is playing. Media state changes replace
   // a message li; social-only changes (receipts, reactions) are patched in.
@@ -332,11 +338,7 @@ export function initChat() {
       chipBtn.addEventListener('click', () => handle?.react(m.id, emoji));
       bar.append(chipBtn);
     }
-    const add = el('button', 'add');
-    add.type = 'button';
-    add.textContent = '+';
-    add.title = 'Add reaction';
-    add.addEventListener('click', () => bar.classList.toggle('open'));
+    // No + button; the picker opens by clicking or holding the message itself.
     const picker = el('span', 'picker');
     for (const emoji of REACTIONS) {
       const pb = el('button');
@@ -348,7 +350,7 @@ export function initChat() {
       });
       picker.append(pb);
     }
-    bar.append(add, picker);
+    bar.append(picker);
     return bar;
   };
 
@@ -621,6 +623,56 @@ export function initChat() {
       ticks.innerHTML = tickSvg(state);
       li.append(ticks);
     }
+
+    // Click or press-and-hold the message to open its reaction picker. Clicks
+    // on links, buttons, media and the bar itself belong to those elements.
+    let held = false;
+    let holdTimer: number | undefined;
+    const guarded = (e: Event) => {
+      const t = e.target as HTMLElement;
+      return !!t.closest?.('a, button, video, audio, iframe, textarea, input, .reacts');
+    };
+    const openPicker = (force: boolean) => {
+      const bar = li.querySelector('.reacts');
+      if (!bar) return;
+      for (const other of msgsList.querySelectorAll('.reacts.open')) {
+        if (other !== bar) other.classList.remove('open');
+      }
+      if (force) bar.classList.add('open');
+      else bar.classList.toggle('open');
+    };
+    li.addEventListener('click', (e) => {
+      if (held) {
+        held = false;
+        e.preventDefault();
+        return;
+      }
+      if (guarded(e)) return;
+      openPicker(false);
+    });
+    li.addEventListener('touchstart', () => {
+      held = false;
+      holdTimer = window.setTimeout(() => {
+        holdTimer = undefined;
+        held = true;
+        openPicker(true);
+      }, 450);
+    }, {passive: true});
+    const cancelHold = () => {
+      if (holdTimer !== undefined) {
+        clearTimeout(holdTimer);
+        holdTimer = undefined;
+      }
+    };
+    li.addEventListener('touchend', cancelHold, {passive: true});
+    li.addEventListener('touchmove', cancelHold, {passive: true});
+    li.addEventListener('touchcancel', cancelHold, {passive: true});
+    li.addEventListener('contextmenu', (e) => {
+      if (guarded(e)) return;
+      // Android long-press and desktop right-click route through here.
+      e.preventDefault();
+      openPicker(true);
+    });
 
     li.append(buildReacts(m));
     return li;

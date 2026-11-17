@@ -37,7 +37,8 @@ const claims =
                 <div class="fbtns"><a class="fbtn">Open (displayable types only)</a>
                 <a class="fbtn">Download</a></div></div> or <progress> while moving</div>
         then (own msgs only):  <span class="ticks [read]">tick svg</span>
-                <div class="reacts"><button aria-pressed>emoji</button>...</div>
+                <div class="reacts"><button aria-pressed>emoji</button>...</div> shown only with
+                reactions or open; picker opens on message click or hold
   -->
   <section class="chatwrap" aria-label="No-trace chat room">
     <p class="err err-landing" data-error-landing aria-live="polite" hidden></p>
@@ -241,13 +242,14 @@ const claims =
     stroke-linecap: round; stroke-linejoin: round;
   }
   .msg .ticks.read path { stroke: #34b7f1; }
-  .reacts { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.3rem; }
+  .reacts { display: none; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.3rem; }
+  /* Only visible when it has chips or the picker is open on the message. */
+  .reacts:has(> button), .reacts.open { display: flex; }
   .reacts button {
     min-height: 28px; border: 1px solid var(--paper-edge); background: var(--paper); border-radius: 4px;
     cursor: pointer; padding: 0 0.4rem; font-size: var(--step--1);
   }
   .reacts button[aria-pressed="true"] { background: var(--pen-soft); border-color: var(--pen); }
-  .reacts .add { color: var(--muted); }
   .reacts .picker { display: none; gap: 0.25rem; }
   .reacts:hover .picker, .reacts.open .picker { display: flex; }
 
