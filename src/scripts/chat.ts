@@ -143,7 +143,7 @@ export function initChat() {
   const fitRoom = () => {
     if (roomView.hidden) return;
     const top = roomView.getBoundingClientRect().top + window.scrollY;
-    roomView.style.height = `${Math.max(300, window.innerHeight - top - 12)}px`;
+    roomView.style.height = `${Math.max(300, window.innerHeight - top - 28)}px`;
   };
   window.addEventListener('resize', fitRoom);
   // Font swaps shift the chrome above the panel; measure again once loaded.
