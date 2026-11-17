@@ -156,11 +156,14 @@ const claims =
   .bar .copy-link {
     flex-direction: row; align-items: center; justify-content: center; gap: 0.4rem;
     min-height: 38px; min-width: 6.6rem; padding: 0 0.95rem; border-radius: 999px;
-    background: var(--ink); color: var(--paper); border: 0;
-    font-weight: 500; transition: background-color 0.15s;
+    background: var(--paper); color: var(--ink); border: 1px solid var(--ink);
+    font-weight: 500; line-height: 1;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
   }
-  .bar .copy-link:hover, .bar .copy-link.copied { background: #0e1712; }
-  .bar .copy-link svg { width: 1rem; height: 1rem; }
+  .bar .copy-link:hover { background: var(--mat); border-color: var(--ink); }
+  .bar .copy-link.copied { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .bar .copy-link svg { width: 1rem; height: 1rem; flex: none; }
+  .bar .copy-link .lbl { line-height: 1; }
 
   .requests {
     border: 1px dashed var(--pen); background: var(--note); color: var(--note-ink);
