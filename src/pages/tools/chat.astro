@@ -32,8 +32,10 @@ const claims =
         <p class="who"><b>Name</b> <time>hh:mm</time></p>
         text:   <div class="bubble">paragraphs</div>
         code:   <div class="codewrap"><pre><code></code></pre><button class="copy">Copy</button></div>
-        file:   <div class="filechip"><a download><img class="thumb"><span class="fname">Name (size)</span></a>
-                or <a download>Name (size)</a> or <progress> while moving</div>
+        file:   <div class="filechip">[preview per type] <div class="filecard"><span class="ficon">PDF</span>
+                <div class="fmeta"><div class="fnm">Name</div><div class="fsz">size</div></div>
+                <div class="fbtns"><a class="fbtn">Open (displayable types only)</a>
+                <a class="fbtn">Download</a></div></div> or <progress> while moving</div>
         then:   <p class="seen">Seen by ...</p>
                 <div class="reacts"><button aria-pressed>emoji</button>...</div>
   -->
@@ -77,7 +79,7 @@ const claims =
           <input class="visually-hidden" type="file" id="chat-file" data-file />
           <button type="button" class="go" data-send>Send</button>
         </div>
-        <p class="hint"><kbd>Enter</kbd> sends, <kbd>Shift</kbd> + <kbd>Enter</kbd> adds a line, <kbd>Ctrl/Cmd</kbd> + <kbd>V</kbd> attaches a copied image or file.</p>
+        <p class="hint"><kbd>Enter</kbd> sends, <kbd>Shift</kbd> + <kbd>Enter</kbd> adds a line, <kbd>Ctrl/Cmd</kbd> + <kbd>V</kbd> or dropping files attaches them.</p>
       </div>
     </div>
   </section>
@@ -204,6 +206,32 @@ const claims =
     border: 1px solid var(--paper-edge);
   }
   .filechip .fname { display: block; }
+  .filechip .pdfview { width: min(24rem, 100%); height: 11rem; border: 1px solid var(--paper-edge); border-radius: 10px; background: var(--paper); }
+  .filechip .vidview { max-width: min(24rem, 100%); max-height: 14rem; border-radius: 10px; display: block; }
+  .filechip audio { width: min(24rem, 100%); }
+  .filechip .txtprev {
+    font-family: var(--mono); font-size: var(--step--1); background: var(--paper);
+    border: 1px solid var(--paper-edge); border-radius: 10px; padding: 0.5rem 0.6rem; margin: 0;
+    max-height: 9rem; overflow: hidden; white-space: pre-wrap; max-width: min(24rem, 100%);
+  }
+  .filecard {
+    display: flex; align-items: center; gap: 0.5rem; max-width: 24rem;
+    background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 10px; padding: 0.4rem 0.5rem;
+  }
+  .filecard .ficon {
+    width: 2.6rem; height: 2.6rem; flex: none; display: grid; place-items: center;
+    background: var(--mat); border: 1px solid var(--paper-edge); border-radius: 8px;
+    font: 600 0.58rem var(--mono); color: var(--muted);
+  }
+  .filecard .fmeta { flex: 1; min-width: 0; }
+  .filecard .fnm { font-family: var(--mono); font-size: var(--step--1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .filecard .fsz { color: var(--muted); font-size: 0.66rem; }
+  .filecard .fbtns { display: flex; gap: 0.3rem; flex: none; }
+  .filecard .fbtn {
+    border: 1px solid var(--paper-edge); background: var(--paper); border-radius: 6px;
+    padding: 0.2rem 0.55rem; font-size: var(--step--1); cursor: pointer;
+  }
+  .filecard .fbtn:hover { border-color: var(--pen); }
   .filechip progress { width: 100%; height: 8px; accent-color: var(--pen); max-width: 92%; display: block; }
   .seen { font-size: 0.66rem; color: var(--muted); margin: 0.2rem 0 0; }
   .reacts { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.3rem; }
@@ -267,12 +295,15 @@ const claims =
   body[data-chat-view='room'] .intro,
   body[data-chat-view='room'] .landing,
   body[data-chat-view='room'] .how { display: none; }
+  body[data-chat-view='room'] .chatwrap { margin-top: 0; }
 </style>
 <style is:global>
-  /* Chat room wants the near-full-width sheet while it is open. */
+  /* Chat room wants the near-full-width sheet while it is open, with as
+     little chrome above the panel as possible. */
   body[data-chat-view='room'] main.sheet {
     max-width: 74rem;
-    padding: 1.2rem clamp(0.8rem, 2vw, 1.5rem) 0.6rem;
+    margin: 0.5rem auto 0;
+    padding: 0.6rem clamp(0.8rem, 2vw, 1.5rem) 0.4rem;
   }
 
   @media (max-width: 640px) {

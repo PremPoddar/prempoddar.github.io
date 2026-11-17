@@ -44,6 +44,16 @@ const fmtSize = (n: number) =>
 const clock = (ts: number) =>
   new Date(ts).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
 
+// File types the browser itself can display, so an Open button makes sense.
+const openable = (mime: string) =>
+  /^(image|video|audio)\//.test(mime) || mime === 'application/pdf' || mime.startsWith('text/');
+
+const extOf = (name: string) => {
+  const parts = name.split('.');
+  const e = parts.length > 1 ? (parts.pop() ?? '').toUpperCase() : '';
+  return /^[A-Z0-9]{1,5}$/.test(e) ? e : 'FILE';
+};
+
 export function initChat() {
   const landing = $<HTMLElement>('[data-landing]');
   const roomView = $<HTMLElement>('[data-room]');
@@ -77,6 +87,8 @@ export function initChat() {
 
   nameInput.value = myName;
   codeInput.value = location.hash.slice(1);
+  // A join link means joining is the only move.
+  createBtn.hidden = Boolean(location.hash.slice(1));
 
   const showError = (text: string) => {
     // Errors go to the banner of the view you are on.
@@ -107,6 +119,9 @@ export function initChat() {
     setStatus(null);
     errorBanner.hidden = true;
     history.replaceState(null, '', location.pathname);
+    createBtn.hidden = Boolean(location.hash.slice(1));
+    if (createBtn.hidden) joinBtn.classList.remove('ghost');
+    else joinBtn.classList.add('ghost');
     if (focus) nameInput.focus();
   };
 
@@ -181,6 +196,8 @@ export function initChat() {
     const raw = compose.value;
     const files = staged.map((s) => s.file);
     if (!raw.trim() && !files.length) return;
+    // Sending always brings the newest messages into view.
+    stick = true;
     if (raw.trim()) handle?.sendText(raw);
     for (const f of files) handle?.sendFile(f, () => {});
     compose.value = '';
@@ -246,6 +263,18 @@ export function initChat() {
   // An image (or any file) copied elsewhere can be attached with a paste.
   compose.addEventListener('paste', (e) => {
     const files = [...(e.clipboardData?.files ?? [])];
+    if (!files.length) return;
+    e.preventDefault();
+    for (const f of files) stage(f);
+  });
+
+  // Dropping files anywhere in the room attaches them like a paste; text
+  // drags keep their default behavior.
+  roomView.addEventListener('dragover', (e) => {
+    if ([...(e.dataTransfer?.types ?? [])].includes('Files')) e.preventDefault();
+  });
+  roomView.addEventListener('drop', (e) => {
+    const files = [...(e.dataTransfer?.files ?? [])];
     if (!files.length) return;
     e.preventDefault();
     for (const f of files) stage(f);
@@ -372,7 +401,76 @@ export function initChat() {
       }
     }
 
-    if (m.file) {
+    // File types the browser itself can display get a preview above the card.
+  const addPreview = (chip: HTMLElement, url: string, mime: string, name: string, blob: Blob) => {
+    if (mime.startsWith('image/')) {
+      const img = el('img', 'thumb');
+      img.src = url;
+      img.alt = name;
+      chip.append(img);
+    } else if (mime === 'application/pdf') {
+      const fr = el('iframe', 'pdfview');
+      fr.src = url;
+      fr.title = name;
+      chip.append(fr);
+    } else if (mime.startsWith('video/')) {
+      const v = el('video', 'vidview');
+      v.src = url;
+      v.controls = true;
+      v.preload = 'metadata';
+      chip.append(v);
+    } else if (mime.startsWith('audio/')) {
+      const a = el('audio');
+      a.src = url;
+      a.controls = true;
+      chip.append(a);
+    } else if (mime.startsWith('text/')) {
+      const pre = el('pre', 'txtprev');
+      pre.textContent = 'Preview loading...';
+      blob.text().then(
+        (t) => {
+          pre.textContent = t.slice(0, 400);
+        },
+        () => {
+          pre.remove();
+        },
+      );
+      chip.append(pre);
+    }
+  };
+
+  // Icon, name and size, then Download and, when the browser can show the
+  // type, Open in a new tab.
+  const fileCard = (url: string, name: string, size: number, mime: string) => {
+    const card = el('div', 'filecard');
+    const icon = el('span', 'ficon');
+    icon.textContent = extOf(name);
+    const meta = el('div', 'fmeta');
+    const nm = el('div', 'fnm');
+    nm.textContent = name;
+    nm.title = name;
+    const sz = el('div', 'fsz');
+    sz.textContent = fmtSize(size);
+    meta.append(nm, sz);
+    const btns = el('div', 'fbtns');
+    const dl = el('a', 'fbtn');
+    dl.href = url;
+    dl.download = name;
+    dl.textContent = 'Download';
+    btns.append(dl);
+    if (openable(mime)) {
+      const op = el('a', 'fbtn');
+      op.href = url;
+      op.target = '_blank';
+      op.rel = 'noopener noreferrer';
+      op.textContent = 'Open';
+      btns.prepend(op);
+    }
+    card.append(icon, meta, btns);
+    return card;
+  };
+
+  if (m.file) {
       const chip = el('div', 'filechip');
       if (m.file.blob) {
         let url = fileUrls.get(m.id);
@@ -380,24 +478,8 @@ export function initChat() {
           url = URL.createObjectURL(m.file.blob);
           fileUrls.set(m.id, url);
         }
-        if (m.file.mime.startsWith('image/')) {
-          const img = el('img', 'thumb');
-          img.src = url;
-          img.alt = m.file.name;
-          const nm = el('span', 'fname');
-          nm.textContent = `${m.file.name} (${fmtSize(m.file.size)})`;
-          const a = el('a');
-          a.href = url;
-          a.download = m.file.name;
-          a.append(img, nm);
-          chip.append(a);
-        } else {
-          const a = el('a');
-          a.href = url;
-          a.download = m.file.name;
-          a.textContent = `${m.file.name} (${fmtSize(m.file.size)})`;
-          chip.append(a);
-        }
+        addPreview(chip, url, m.file.mime, m.file.name, m.file.blob);
+        chip.append(fileCard(url, m.file.name, m.file.size, m.file.mime));
       } else {
         const prog = el('progress');
         prog.max = 100;
