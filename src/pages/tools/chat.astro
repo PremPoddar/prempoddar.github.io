@@ -37,8 +37,9 @@ const claims =
                 <div class="fbtns"><a class="fbtn">Open (displayable types only)</a>
                 <a class="fbtn">Download</a></div></div> or <progress> while moving</div>
         then (own msgs only):  <span class="ticks [read]">tick svg</span>
-                <div class="reacts"><button aria-pressed>emoji</button>...</div> shown only with
-                reactions or open; picker opens on message click or hold
+                <div class="reacts"><button aria-pressed>emoji</button>...</div> floats on the
+                message's bottom-left corner, shown only with reactions or open; picker
+                opens on message click or hold
   -->
   <section class="chatwrap" aria-label="No-trace chat room">
     <p class="err err-landing" data-error-landing aria-live="polite" hidden></p>
@@ -170,7 +171,7 @@ const claims =
     background: var(--mat); border: 1px solid var(--paper-edge); border-radius: 8px; scrollbar-width: thin;
   }
   .msgs li { margin-bottom: 0.7rem; }
-  .msg { display: flex; flex-direction: column; align-items: flex-start; }
+  .msg { display: flex; flex-direction: column; align-items: flex-start; position: relative; }
   .msg.mine { align-items: flex-end; }
   .msg .who { font-size: var(--step--1); color: var(--muted); margin: 0 0 0.2rem; }
   .msg .who b { color: var(--ink); font-weight: 600; }
@@ -242,7 +243,13 @@ const claims =
     stroke-linecap: round; stroke-linejoin: round;
   }
   .msg .ticks.read path { stroke: #34b7f1; }
-  .reacts { display: none; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.3rem; }
+  /* Reactions float on the message's bottom-left corner instead of taking a
+     line; nothing below the message shifts when chips or the picker appear. */
+  .reacts {
+    display: none; flex-wrap: wrap; gap: 0.25rem; margin: 0;
+    position: absolute; left: 0.4rem; bottom: -0.5rem; z-index: 2;
+    max-width: calc(100% - 0.8rem);
+  }
   /* Only visible when it has chips or the picker is open on the message. */
   .reacts:has(> button), .reacts.open { display: flex; }
   .reacts button {
