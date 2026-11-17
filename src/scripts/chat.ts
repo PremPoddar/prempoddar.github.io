@@ -519,7 +519,16 @@ export function initChat() {
       const v = el('video', 'vidview');
       v.src = url;
       v.controls = true;
-      v.preload = 'metadata';
+      // Local blob, so buffering is free; Safari needs both auto preload and
+      // a tiny seek before it will paint the first frame.
+      v.preload = 'auto';
+      v.addEventListener(
+        'loadedmetadata',
+        () => {
+          v.currentTime = 0.01;
+        },
+        {once: true},
+      );
       chip.append(v);
     } else if (mime.startsWith('audio/')) {
       const a = el('audio');
