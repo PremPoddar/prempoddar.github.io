@@ -95,14 +95,27 @@ export function initChat() {
   const showLanding = (focus = true) => {
     landing.hidden = false;
     roomView.hidden = true;
+    document.body.dataset.chatView = 'landing';
     setStatus(null);
     history.replaceState(null, '', location.pathname);
     if (focus) nameInput.focus();
   };
+
+  // Fill the viewport below the chat header with the panel, whatever the
+  // nav or padding above it happens to be.
+  const fitRoom = () => {
+    if (roomView.hidden) return;
+    const top = roomView.getBoundingClientRect().top;
+    roomView.style.height = `${Math.max(380, window.innerHeight - top - 20)}px`;
+  };
+  window.addEventListener('resize', fitRoom);
+
   const showRoom = () => {
     landing.hidden = true;
     roomView.hidden = false;
+    document.body.dataset.chatView = 'room';
     linkOut.textContent = `${location.origin}/tools/chat/#${code}`;
+    fitRoom();
   };
 
   const start = (create: boolean) => {
@@ -168,11 +181,23 @@ export function initChat() {
     const f = fileInput.files?.[0];
     fileInput.value = '';
     if (!f) return;
+    sendOne(f);
+  });
+
+  const sendOne = (f: File) => {
     if (fileTooBig(f.size)) {
       showError('That is over the 25 MB limit.');
       return;
     }
     handle?.sendFile(f, () => {});
+  };
+
+  // An image (or any file) copied elsewhere can be pasted straight in.
+  compose.addEventListener('paste', (e) => {
+    const files = [...(e.clipboardData?.files ?? [])];
+    if (!files.length) return;
+    e.preventDefault();
+    for (const f of files) sendOne(f);
   });
 
   // Owner approvals live behind one delegated listener; rows are rebuilt per flush.
