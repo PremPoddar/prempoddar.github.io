@@ -522,6 +522,8 @@ export function initChat() {
       // Local blob, so buffering is free; Safari needs both auto preload and
       // a tiny seek before it will paint the first frame.
       v.preload = 'auto';
+      // iOS Safari otherwise takes the whole screen when someone taps play.
+      v.playsInline = true;
       v.addEventListener(
         'loadedmetadata',
         () => {
