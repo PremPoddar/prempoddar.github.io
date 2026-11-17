@@ -18,8 +18,10 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string): HTMLEl
 function copyText(text: string, btn: HTMLButtonElement, label = 'Copy') {
   const lbl = (btn.querySelector('.lbl') as HTMLElement | null) ?? btn;
   const done = (ok: boolean) => {
+    btn.classList.add('copied');
     lbl.textContent = ok ? 'Copied' : 'Copy failed';
     setTimeout(() => {
+      btn.classList.remove('copied');
       lbl.textContent = label;
     }, 1500);
   };
@@ -190,7 +192,7 @@ export function initChat() {
     }
   });
 
-  copyLinkBtn.addEventListener('click', () => copyText(linkOut.textContent ?? '', copyLinkBtn));
+  copyLinkBtn.addEventListener('click', () => copyText(linkOut.textContent ?? '', copyLinkBtn, 'Copy link'));
 
   const send = () => {
     const raw = compose.value;
