@@ -298,6 +298,69 @@ export function initChat() {
     stick = msgsList.scrollHeight - msgsList.scrollTop - msgsList.clientHeight < 40;
   });
 
+  // Messages are built once and never torn down wholesale: flushes must not
+  // restart a video or audio the user is playing. Media state changes replace
+  // a message li; social-only changes (receipts, reactions) are patched in.
+  let renderedRoom = '';
+
+  const socialSig = (m: ChatMessage) =>
+    m.seenBy.join('|') + '#' + REACTIONS.map((e) => `${e}${(m.reactions[e] ?? []).length}`).join('.');
+
+  const mediaSig = (m: ChatMessage) => (m.file ? `${m.file.pct ?? 1}:${m.file.blob ? 'b' : 'p'}` : '');
+
+  const buildReacts = (m: ChatMessage) => {
+    const bar = el('div', 'reacts');
+    for (const emoji of REACTIONS.filter((e) => (m.reactions[e] ?? []).length > 0)) {
+      const names = m.reactions[emoji] ?? [];
+      const chipBtn = el('button');
+      chipBtn.type = 'button';
+      chipBtn.textContent = `${emoji} ×${names.length}`;
+      chipBtn.title = names.join(', ');
+      chipBtn.setAttribute('aria-pressed', String(names.includes(myName)));
+      chipBtn.addEventListener('click', () => handle?.react(m.id, emoji));
+      bar.append(chipBtn);
+    }
+    const add = el('button', 'add');
+    add.type = 'button';
+    add.textContent = '+';
+    add.title = 'Add reaction';
+    add.addEventListener('click', () => bar.classList.toggle('open'));
+    const picker = el('span', 'picker');
+    for (const emoji of REACTIONS) {
+      const pb = el('button');
+      pb.type = 'button';
+      pb.textContent = emoji;
+      pb.addEventListener('click', () => {
+        handle?.react(m.id, emoji);
+        bar.classList.remove('open');
+      });
+      picker.append(pb);
+    }
+    bar.append(add, picker);
+    return bar;
+  };
+
+  const updateSocial = (li: HTMLLIElement, m: ChatMessage) => {
+    const seen = li.querySelector('.seen');
+    if (m.seenBy.length) {
+      const text = `Seen by ${m.seenBy.join(', ')}`;
+      if (seen) seen.textContent = text;
+      else {
+        const p = el('p', 'seen');
+        p.textContent = text;
+        const bar = li.querySelector('.reacts');
+        if (bar) bar.before(p);
+        else li.append(p);
+      }
+    } else if (seen) {
+      seen.remove();
+    }
+    const bar = li.querySelector('.reacts');
+    const fresh = buildReacts(m);
+    if (bar) bar.replaceWith(fresh);
+    else li.append(fresh);
+  };
+
   function render(snap: Snapshot) {
     lastSnap = snap;
     const room = snap.room;
@@ -359,10 +422,44 @@ export function initChat() {
     // Error banner.
     if (snap.error && errorBanner.hidden) showError(snap.error);
 
-    // Messages, oldest last.
-    const frag = document.createDocumentFragment();
-    for (const m of snap.msgs) frag.append(renderMsg(m));
-    msgsList.replaceChildren(frag);
+    // Messages, oldest last, append-only so playing media is never rebuilt.
+    if (renderedRoom !== code) {
+      renderedRoom = code;
+      msgsList.replaceChildren();
+    }
+    const kids = [...msgsList.children] as HTMLLIElement[];
+    let i = 0;
+    for (; i < snap.msgs.length && i < kids.length; i++) {
+      const m = snap.msgs[i];
+      const li = kids[i];
+      if (li.dataset.id !== m.id) {
+        // Order broke (new room edge): rebuild the tail from here.
+        for (let j = i; j < kids.length; j++) kids[j].remove();
+        break;
+      }
+      const ms = mediaSig(m);
+      if (li.dataset.media !== ms) {
+        const fresh = renderMsg(m);
+        fresh.dataset.id = m.id;
+        fresh.dataset.media = ms;
+        fresh.dataset.social = socialSig(m);
+        li.replaceWith(fresh);
+      } else if (li.dataset.social !== socialSig(m)) {
+        updateSocial(li, m);
+        li.dataset.social = socialSig(m);
+      }
+    }
+    for (; i < snap.msgs.length; i++) {
+      const m = snap.msgs[i];
+      const li = renderMsg(m);
+      li.dataset.id = m.id;
+      li.dataset.media = mediaSig(m);
+      li.dataset.social = socialSig(m);
+      msgsList.append(li);
+    }
+    if (kids.length > snap.msgs.length) {
+      for (let j = snap.msgs.length; j < kids.length; j++) kids[j].remove();
+    }
     if (stick) msgsList.scrollTop = msgsList.scrollHeight;
   }
 
@@ -502,36 +599,7 @@ export function initChat() {
       li.append(seen);
     }
 
-    const active = REACTIONS.filter((e) => (m.reactions[e] ?? []).length > 0);
-    const bar = el('div', 'reacts');
-    for (const emoji of active) {
-      const names = m.reactions[emoji] ?? [];
-      const chipBtn = el('button');
-      chipBtn.type = 'button';
-      chipBtn.textContent = `${emoji} ×${names.length}`;
-      chipBtn.title = names.join(', ');
-      chipBtn.setAttribute('aria-pressed', String(names.includes(myName)));
-      chipBtn.addEventListener('click', () => handle?.react(m.id, emoji));
-      bar.append(chipBtn);
-    }
-    const add = el('button', 'add');
-    add.type = 'button';
-    add.textContent = '+';
-    add.title = 'Add reaction';
-    add.addEventListener('click', () => bar.classList.toggle('open'));
-    const picker = el('span', 'picker');
-    for (const emoji of REACTIONS) {
-      const pb = el('button');
-      pb.type = 'button';
-      pb.textContent = emoji;
-      pb.addEventListener('click', () => {
-        handle?.react(m.id, emoji);
-        bar.classList.remove('open');
-      });
-      picker.append(pb);
-    }
-    bar.append(add, picker);
-    li.append(bar);
+    li.append(buildReacts(m));
     return li;
   }
 
