@@ -263,11 +263,14 @@ const claims =
   .steps li { margin-bottom: 0.55rem; color: var(--muted); line-height: 1.5; }
   .steps b { color: var(--ink); }
 
-  /* In a room the chat takes the whole page and nearly the whole width. */
+  /* In a room the chat takes the whole page; everything else steps aside. */
   body[data-chat-view='room'] .intro,
   body[data-chat-view='room'] .landing,
   body[data-chat-view='room'] .how { display: none; }
-  :global(body[data-chat-view='room'] main.sheet) {
+</style>
+<style is:global>
+  /* Chat room wants the near-full-width sheet while it is open. */
+  body[data-chat-view='room'] main.sheet {
     max-width: 74rem;
     padding: 1.2rem clamp(0.8rem, 2vw, 1.5rem) 0.6rem;
   }
