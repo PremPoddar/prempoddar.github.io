@@ -60,6 +60,7 @@ export function initChat() {
   const composerBox = compose.closest('.composer') as HTMLElement;
   const fileInput = $<HTMLInputElement>('[data-file]');
   const sendBtn = $<HTMLButtonElement>('[data-send]');
+  const stagedBox = $<HTMLElement>('[data-staged]');
   const leaveBtn = $<HTMLButtonElement>('[data-leave]');
   const errorBanner = $<HTMLElement>('[data-error]');
   const statusBanner = $<HTMLElement>('[data-status]');
@@ -72,6 +73,7 @@ export function initChat() {
   let lastSnap: Snapshot | null = null;
   let stick = true;
   const fileUrls = new Map<string, string>(); // msgId -> object URL, revoked on leave
+  let staged: {file: File; url?: string}[] = [];
 
   nameInput.value = myName;
   codeInput.value = location.hash.slice(1);
@@ -168,14 +170,24 @@ export function initChat() {
     lastSnap = null;
     for (const url of fileUrls.values()) URL.revokeObjectURL(url);
     fileUrls.clear();
+    for (const s of staged) if (s.url) URL.revokeObjectURL(s.url);
+    staged = [];
+    renderStaged();
     code = '';
     showLanding();
   });
 
   const send = () => {
     const raw = compose.value;
+    const files = staged.map((s) => s.file);
+    if (!raw.trim() && !files.length) return;
     if (raw.trim()) handle?.sendText(raw);
+    for (const f of files) handle?.sendFile(f, () => {});
     compose.value = '';
+    for (const s of staged) if (s.url) URL.revokeObjectURL(s.url);
+    staged = [];
+    renderStaged();
+    compose.focus();
   };
   sendBtn.addEventListener('click', send);
   compose.addEventListener('keydown', (e) => {
@@ -185,27 +197,58 @@ export function initChat() {
     }
   });
 
-  fileInput.addEventListener('change', () => {
-    const f = fileInput.files?.[0];
-    fileInput.value = '';
-    if (!f) return;
-    sendOne(f);
-  });
+  const renderStaged = () => {
+    stagedBox.hidden = staged.length === 0;
+    stagedBox.replaceChildren(
+      ...staged.map((s, i) => {
+        const li = el('li');
+        if (s.url) {
+          const img = el('img');
+          img.src = s.url;
+          img.alt = s.file.name;
+          li.append(img);
+        }
+        const nm = el('span', 'nm');
+        nm.textContent = s.file.name;
+        const drop = el('button', 'drop');
+        drop.type = 'button';
+        drop.textContent = '×';
+        drop.title = 'Remove attachment';
+        drop.addEventListener('click', () => {
+          if (s.url) URL.revokeObjectURL(s.url);
+          staged.splice(i, 1);
+          renderStaged();
+          compose.focus();
+        });
+        li.append(nm, drop);
+        return li;
+      }),
+    );
+  };
 
-  const sendOne = (f: File) => {
+  // Attachments wait in the composer; Enter or Send releases them with the text.
+  const stage = (f: File) => {
     if (fileTooBig(f.size)) {
       showError('That is over the 25 MB limit.');
       return;
     }
-    handle?.sendFile(f, () => {});
+    staged.push({file: f, url: f.type.startsWith('image/') ? URL.createObjectURL(f) : undefined});
+    renderStaged();
   };
 
-  // An image (or any file) copied elsewhere can be pasted straight in.
+  fileInput.addEventListener('change', () => {
+    const f = fileInput.files?.[0];
+    fileInput.value = '';
+    if (!f) return;
+    stage(f);
+  });
+
+  // An image (or any file) copied elsewhere can be attached with a paste.
   compose.addEventListener('paste', (e) => {
     const files = [...(e.clipboardData?.files ?? [])];
     if (!files.length) return;
     e.preventDefault();
-    for (const f of files) sendOne(f);
+    for (const f of files) stage(f);
   });
 
   // Owner approvals live behind one delegated listener; rows are rebuilt per flush.
@@ -338,19 +381,23 @@ export function initChat() {
           fileUrls.set(m.id, url);
         }
         if (m.file.mime.startsWith('image/')) {
-          const img = el('img');
+          const img = el('img', 'thumb');
           img.src = url;
           img.alt = m.file.name;
-          img.style.maxWidth = '100%';
-          img.style.borderRadius = '6px';
-          img.style.display = 'block';
-          chip.append(img);
+          const nm = el('span', 'fname');
+          nm.textContent = `${m.file.name} (${fmtSize(m.file.size)})`;
+          const a = el('a');
+          a.href = url;
+          a.download = m.file.name;
+          a.append(img, nm);
+          chip.append(a);
+        } else {
+          const a = el('a');
+          a.href = url;
+          a.download = m.file.name;
+          a.textContent = `${m.file.name} (${fmtSize(m.file.size)})`;
+          chip.append(a);
         }
-        const a = el('a');
-        a.href = url;
-        a.download = m.file.name;
-        a.textContent = `${m.file.name} (${fmtSize(m.file.size)})`;
-        chip.append(a);
       } else {
         const prog = el('progress');
         prog.max = 100;
