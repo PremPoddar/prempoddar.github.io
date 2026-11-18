@@ -7,5 +7,5 @@ export function publishedPosts<T extends Dated>(posts: T[], isProd: boolean): T[
 }
 
 export function byOrder<T extends { data: { order: number } }>(xs: T[]): T[] {
-  return [...xs].sort((a, b) => a.data.order - b.data.order);
+  return xs.toSorted((a, b) => a.data.order - b.data.order);
 }
