@@ -1,7 +1,49 @@
 ---
 import Page from '../../layouts/Page.astro';
+
+const miniModules = 9;
+const miniCells = miniModules * 3;
+const miniDots: Array<{ x: number; y: number }> = [];
+
+for (let my = 0; my < miniModules; my += 1) {
+  for (let mx = 0; mx < miniModules; mx += 1) {
+    const top = my < 3;
+    const bottom = my > 5;
+    const left = mx < 3;
+    const right = mx > 5;
+    const finder = (top && left) || (top && right) || (bottom && left);
+    const localY = top ? my : my - 6;
+    const localX = left ? mx : mx - 6;
+
+    for (let cy = 0; cy < 3; cy += 1) {
+      for (let cx = 0; cx < 3; cx += 1) {
+        const row = my * 3 + cy;
+        const col = mx * 3 + cx;
+        let dark: boolean;
+
+        if (finder) {
+          dark = localY === 0 || localY === 2 || localX === 0 || localX === 2;
+        } else if (cy === 1 && cx === 1) {
+          dark = (my * 5 + mx * 3 + 2) % 7 < 3;
+        } else {
+          const u = col / (miniCells - 1);
+          const v = row / (miniCells - 1);
+          const sun = Math.hypot(u - 0.64, v - 0.3) < 0.14;
+          const river = v > 0.64 && u > 0.52 && u < 0.72;
+          let light = v < 0.6 ? 0.62 + (0.6 - v) * 0.55 : 0.34 - (v - 0.6) * 0.25;
+          if (sun) light += 0.35;
+          if (river) light += 0.3;
+          const threshold = 0.56 + (((col * 7 + row * 3) % 5) / 5 - 0.4) * 0.08;
+          dark = light < threshold;
+        }
+
+        if (dark) miniDots.push({ x: col, y: row });
+      }
+    }
+  }
+}
 ---
-<Page title="Tools by Prem Poddar - web apps that run in the browser" description="Small web apps I built that you can use right here: no install, no account. Starting with a scientific calculator that only has two buttons." full absolute>
+<Page title="Tools by Prem Poddar - web apps that run in the browser" description="Small web apps I built that you can use right here: no install, no account. A two-button calculator, a no-trace chat, and a halftone QR maker that prints a photo into a scannable code." full absolute>
   <header class="intro">
     <h1>Tools</h1>
     <p class="lede">Things I built that you can use right here in the browser. No install, no account, nothing leaves your device.</p>
@@ -44,6 +86,25 @@ import Page from '../../layouts/Page.astro';
         <p>A temporary room for quick handoffs: messages, photos and files, encrypted, device to device. Close the tab and it's all gone.</p>
         <span class="ids" aria-hidden="true">room code = 3 words · owner approves · 8 people max</span>
         <span class="open">Open the chat <span class="arrow">→</span></span>
+      </span>
+    </a>
+
+    <a class="tool" href="/tools/halftone-qr/">
+      <span class="mini halftone" aria-hidden="true">
+        <svg class="mini-qr" viewBox={`0 0 ${miniCells} ${miniCells}`} shape-rendering="crispEdges">
+          <rect width={miniCells} height={miniCells} fill="var(--paper)" />
+          <g fill="var(--ink)">
+            {miniDots.map((dot) => <rect x={dot.x} y={dot.y} width="1" height="1" />)}
+          </g>
+        </svg>
+        <span class="brand">PHOTO · DITHER · QR</span>
+      </span>
+      <span class="body">
+        <span class="kicker">tool 03</span>
+        <h2>Halftone QR Codes</h2>
+        <p>Turn a photo into a working QR code, with the picture printed into the dots. Pick your ink and paper, tune the dither, and take a PNG or SVG.</p>
+        <span class="ids" aria-hidden="true">3 cells per module · ink and paper · PNG or SVG</span>
+        <span class="open">Open the QR maker <span class="arrow">→</span></span>
       </span>
     </a>
   </section>
@@ -93,6 +154,14 @@ import Page from '../../layouts/Page.astro';
     transition: background 160ms ease, border-color 160ms ease;
   }
   .tool:hover .k.eml { background: var(--pen-soft); border-color: var(--pen); }
+
+  /* the halftone QR, drawn from cells */
+  .mini.halftone { padding: 0.8rem; }
+  .mini-qr {
+    display: block; width: 100%; height: auto; border: 1px solid var(--paper-edge);
+    border-radius: 4px; background: var(--paper); transition: border-color 160ms ease;
+  }
+  .tool:hover .mini-qr { border-color: var(--pen); }
 
   /* the chat device, drawn in CSS */
   .bubbles { display: flex; flex-direction: column; gap: 0.4rem; min-height: 2.5rem; }

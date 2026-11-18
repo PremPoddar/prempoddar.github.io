@@ -21,6 +21,7 @@ describe('lastmodForPage', () => {
     expect(lastmodForPage('/resources/')).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(lastmodForPage('/tools/')).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(lastmodForPage('/tools/two-button-calculator/')).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(lastmodForPage('/tools/halftone-qr/')).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(lastmodForPage('/resume/')).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 

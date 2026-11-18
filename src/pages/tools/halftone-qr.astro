@@ -1,0 +1,394 @@
+---
+import Page from '../../layouts/Page.astro';
+import JsonLd from '../../components/JsonLd.astro';
+import { webApplicationSchema } from '../../lib/seo';
+
+const canonical = 'https://prempoddar.is-a.dev/tools/halftone-qr/';
+const versions = Array.from({ length: 40 }, (_, index) => index + 1);
+const presets = [
+  { name: 'Ink and paper', ink: '#15201a', paper: '#fdfdfb' },
+  { name: 'Blueprint', ink: '#123a8f', paper: '#eef3ff' },
+  { name: 'Rust', ink: '#8a2f12', paper: '#fbf3e6' },
+  { name: 'Forest', ink: '#1f4d2e', paper: '#f2f7ed' },
+  { name: 'Plum', ink: '#4a1d5e', paper: '#faf1fb' },
+];
+---
+<Page title="Halftone QR Codes - put a photo inside a scannable code" description="Turn a photo into a halftone QR code in your browser. Pick an image, choose the ink, tune the dots, and download a PNG or SVG. Nothing is uploaded." wide absolute>
+  <JsonLd data={[webApplicationSchema(
+    { name: 'Halftone QR Codes', description: 'A browser tool that prints a photo into the dots of a scannable QR code. Supports colour themes, dithering, image framing, error correction and PNG or SVG export.' },
+    canonical,
+  )]} />
+
+  <header class="intro">
+    <h1>Halftone QR Codes</h1>
+    <p class="lede">
+      A QR code with a photograph printed into its dots. The data stays in the centre of each module,
+      and the rest comes from your image. Everything runs in this browser, so the picture never leaves your device.
+    </p>
+  </header>
+
+  <p class="note">
+    The method comes from <a href="https://github.com/gentlecat/halftone-qr" rel="noopener">Roman Tsukanov's halftone QR codes</a> (MIT).
+    Each module is a 3 × 3 block: the middle cell is the code, the eight around it are the photo.
+  </p>
+
+  <section class="studio" aria-label="Halftone QR maker">
+    <div class="preview-col">
+      <figure class="preview-card">
+        <div class="stage" data-stage>
+          <canvas class="preview" data-preview width="720" height="720" role="img" aria-label="Halftone QR preview"></canvas>
+        </div>
+        <figcaption class="preview-meta">
+          <span data-meta>Preparing the code...</span>
+          <span class="scan-tip">Scan with a phone camera</span>
+        </figcaption>
+      </figure>
+
+      <div class="actions">
+        <button type="button" class="btn primary" data-download-png disabled>Download PNG</button>
+        <button type="button" class="btn" data-download-svg disabled>Download SVG</button>
+        <button type="button" class="btn" data-copy disabled>Copy image</button>
+        <button type="button" class="btn" data-scan disabled>Scan check</button>
+      </div>
+      <p class="status" data-status aria-live="polite"></p>
+
+      <p class="hint small">Halftone codes are less forgiving than plain ones. Test the download with a phone camera before you print it.</p>
+    </div>
+
+    <form class="controls" data-form>
+      <fieldset class="group">
+        <legend>What it opens</legend>
+        <label class="field">
+          <span class="label">Link or text <output class="count" data-count>0 / 1200 bytes</output></span>
+          <textarea data-text rows="3" spellcheck="false" maxlength="1200">https://prempoddar.is-a.dev</textarea>
+        </label>
+        <p class="err" data-text-error aria-live="polite" hidden></p>
+        <div class="two">
+          <label class="field">
+            <span class="label">Error correction</span>
+            <select data-ec>
+              <option value="L">L, about 7%</option>
+              <option value="M">M, about 15%</option>
+              <option value="Q">Q, about 25%</option>
+              <option value="H" selected>H, about 30%</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="label">Version</span>
+            <select data-version>
+              <option value="0" selected>Auto</option>
+              {versions.map((version) => <option value={version}>{version}</option>)}
+            </select>
+          </label>
+        </div>
+        <p class="hint">Higher correction survives more damage and more halftone noise. H is the safe default.</p>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Photo</legend>
+        <div class="drop" data-drop>
+          <input class="visually-hidden file-input" id="qr-image" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" data-file />
+          <label class="choose" for="qr-image">Choose image</label>
+          <span>or drop, paste, or <button type="button" class="linkish" data-sample>use the sample</button></span>
+        </div>
+        <p class="err" data-file-error aria-live="polite" hidden></p>
+
+        <div class="frame-row" data-frame-row>
+          <canvas class="frame" data-frame width="240" height="240" tabindex="0" role="application" aria-label="Image framing preview. Drag to move the picture, or use the arrow keys." aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown"></canvas>
+          <div class="frame-side">
+            <label class="field">
+              <span class="label">Fit</span>
+              <select data-fit>
+                <option value="cover" selected>Fill the square</option>
+                <option value="contain">Fit the whole image</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="label">Zoom <output data-zoom-out>100%</output></span>
+              <input type="range" data-zoom min="100" max="300" step="5" value="100" />
+            </label>
+            <button type="button" class="small-btn" data-reset-crop>Reset framing</button>
+          </div>
+        </div>
+        <p class="hint">Drag the picture to choose what sits under the code. Arrow keys nudge it; hold Shift for a larger step.</p>
+
+        <div class="two">
+          <label class="field">
+            <span class="label">Brightness <output data-bright-out>0</output></span>
+            <input type="range" data-brightness min="-60" max="60" step="1" value="0" />
+          </label>
+          <label class="field">
+            <span class="label">Contrast <output data-contrast-out>100%</output></span>
+            <input type="range" data-contrast min="50" max="200" step="5" value="100" />
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Print style</legend>
+        <label class="field">
+          <span class="label">Dot pattern</span>
+          <select data-dither>
+            <option value="floyd" selected>Floyd-Steinberg</option>
+            <option value="atkinson">Atkinson</option>
+            <option value="bayer4">Bayer 4 × 4</option>
+            <option value="bayer8">Bayer 8 × 8</option>
+            <option value="threshold">Hard threshold</option>
+          </select>
+        </label>
+
+        <div class="presets" role="group" aria-label="Colour presets">
+          {presets.map((preset) => (
+            <button
+              type="button"
+              class="preset"
+              data-preset={preset.ink}
+              data-preset-paper={preset.paper}
+              aria-pressed={preset.ink === '#15201a' ? 'true' : 'false'}
+              title={preset.name}
+            >
+              <span class="swatch" style={`background:${preset.ink}`}></span>
+              <span class="swatch" style={`background:${preset.paper}`}></span>
+              <span class="visually-hidden">{preset.name}</span>
+            </button>
+          ))}
+        </div>
+
+        <div class="two">
+          <label class="field color-field">
+            <span class="label">Ink</span>
+            <input type="color" data-ink value="#15201a" />
+          </label>
+          <label class="field color-field">
+            <span class="label">Paper</span>
+            <input type="color" data-paper value="#fdfdfb" />
+          </label>
+        </div>
+        <p class="warn" data-contrast-note role="status"></p>
+
+        <label class="check"><input type="checkbox" data-quiet checked /> Quiet zone around the code</label>
+        <label class="check"><input type="checkbox" data-transparent /> Transparent paper</label>
+        <p class="hint">Transparent is for placing the code on a light background. A dark background will hide the light cells.</p>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Download</legend>
+        <label class="field">
+          <span class="label">Target size</span>
+          <select data-size>
+            <option value="1024">1024 px</option>
+            <option value="2048" selected>2048 px</option>
+            <option value="4096">4096 px</option>
+          </select>
+        </label>
+        <p class="hint" data-size-note>Choose a size to see the exact pixels.</p>
+      </fieldset>
+    </form>
+  </section>
+
+  <section class="prose">
+    <h2>How the photo gets in</h2>
+    <p>
+      Each QR module is drawn as a 3 × 3 block. The middle cell is the module itself, dark or light.
+      The eight cells around it come from the photo. Finder patterns, timing lines, alignment patterns and
+      format data stay solid, so a scanner can still find and read the code.
+    </p>
+    <p>
+      The image is sampled at cell size, adjusted for brightness and contrast, then reduced to two levels with
+      your chosen dither. That result is composed with the QR grid. The preview and the download share the same grid,
+      so the PNG or SVG is exactly what you see here.
+    </p>
+
+    <h2>Scan tips</h2>
+    <p>
+      Use a short link, keep the quiet zone, and keep the ink darker than the paper. Print or display the code at a
+      decent size, at least a few centimetres across. If a phone struggles, raise the error correction to H,
+      increase the contrast, or use a simpler photo with larger areas of light and dark.
+    </p>
+    <p>
+      The scan check uses the browser's built-in BarcodeDetector. Chrome and Chromium browsers usually have it;
+      Safari and Firefox do not. When it is unavailable the button says so, and you can still test the download
+      with a phone camera.
+    </p>
+
+    <h2>Credits</h2>
+    <p class="small">
+      Halftone method: <a href="https://github.com/gentlecat/halftone-qr" rel="noopener">Roman Tsukanov</a>, MIT.
+      QR encoding: <a href="https://github.com/kazuhikoarase/qrcode-generator" rel="noopener">Kazuhiko Arase</a>, MIT.
+      License copies are in <a href="/licenses/halftone-qr.txt">halftone-qr.txt</a> and
+      <a href="/licenses/qrcode-generator.txt">qrcode-generator.txt</a>.
+      The sample landscape is drawn in the page, not a stock photo.
+    </p>
+  </section>
+</Page>
+
+<script>
+  import { initHalftoneQr } from '../../scripts/halftone-qr';
+  initHalftoneQr();
+</script>
+
+<style is:global>
+  .intro h1 { font-size: var(--step-3); }
+  .lede { color: var(--muted); max-width: 64ch; margin: 0.6rem 0 1.4rem; }
+  .note {
+    background: var(--note); color: var(--note-ink);
+    padding: 0.8rem 1rem; border-radius: 4px; max-width: 52rem;
+    font-size: var(--step--1); margin: 0 0 1.6rem;
+  }
+  .note a { color: inherit; }
+
+  .studio {
+    display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 21rem);
+    gap: 1.6rem; align-items: start; margin-top: 0.5rem;
+  }
+  .preview-col { min-width: 0; }
+  @media (min-width: 56.01rem) {
+    .preview-col { position: sticky; top: 1rem; }
+  }
+
+  .preview-card {
+    margin: 0; background: var(--mat); border: 1px solid var(--mat-major);
+    border-radius: 12px; padding: 1rem; box-shadow: var(--lift);
+  }
+  .stage {
+    border: 1px solid var(--paper-edge); border-radius: 6px; overflow: hidden;
+    background: var(--paper);
+  }
+  .stage.is-transparent {
+    background-color: #fff;
+    background-image:
+      linear-gradient(45deg, #e3e8e0 25%, transparent 25%),
+      linear-gradient(-45deg, #e3e8e0 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #e3e8e0 75%),
+      linear-gradient(-45deg, transparent 75%, #e3e8e0 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+  }
+  .preview { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+  .preview-meta {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 0.8rem;
+    flex-wrap: wrap; font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+    padding-top: 0.6rem;
+  }
+  .scan-tip { white-space: nowrap; }
+
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.8rem; }
+  .actions .primary { grid-column: 1 / -1; }
+  .btn {
+    min-height: 44px; border: 1px solid var(--mat-major); background: var(--paper);
+    border-radius: 8px; font: inherit; font-weight: 600; color: var(--ink);
+    padding: 0 0.8rem; cursor: pointer;
+  }
+  .btn:hover:not(:disabled) { border-color: var(--pen); color: var(--pen); }
+  .btn.primary { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .btn.primary:hover:not(:disabled) { background: var(--pen); border-color: var(--pen); color: var(--paper); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .status { min-height: 1.4em; margin: 0.5rem 0 0; font-size: var(--step--1); color: var(--muted); overflow-wrap: anywhere; }
+  .status.ok { color: #256b3a; }
+  .status.bad { color: #a33; }
+
+  .controls { display: grid; gap: 0.8rem; min-width: 0; }
+  .group {
+    margin: 0; border: 1px solid var(--paper-edge); border-radius: 8px;
+    padding: 0.9rem 1rem 1rem; background: var(--paper); min-width: 0;
+  }
+  .group legend {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted); padding: 0 0.35rem;
+  }
+  .field { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.7rem; min-width: 0; }
+  .field:first-of-type { margin-top: 0; }
+  .label {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem;
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .count { font-size: 0.65rem; letter-spacing: 0; text-transform: none; }
+  .count.over { color: #a33; }
+  input[type="text"], textarea, select {
+    width: 100%; min-height: 44px; border: 1px solid var(--mat-major); border-radius: 6px;
+    background: var(--paper); color: var(--ink); font: inherit; padding: 0.5rem 0.6rem;
+  }
+  textarea { resize: vertical; line-height: 1.45; }
+  select { cursor: pointer; }
+  input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--pen); cursor: pointer; padding: 0; }
+  input[type="range"]:disabled { opacity: 0.45; cursor: not-allowed; }
+  input[type="color"] {
+    width: 100%; min-height: 44px; border: 1px solid var(--mat-major); border-radius: 6px;
+    background: var(--paper); padding: 3px; cursor: pointer;
+  }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+
+  .hint { color: var(--muted); font-size: 0.8rem; line-height: 1.45; margin: 0.5rem 0 0; }
+  .hint.small { font-size: 0.76rem; margin-top: 0.8rem; }
+  .err { color: #a33; font-size: var(--step--1); margin: 0.4rem 0 0; }
+  .warn {
+    color: #6b3d00; background: var(--note); font-size: 0.8rem; line-height: 1.4;
+    border-radius: 4px; padding: 0.45rem 0.6rem; margin: 0.6rem 0 0;
+  }
+  .warn:empty { display: none; }
+
+  .drop {
+    margin-top: 0.7rem; border: 2px dashed var(--mat-major); border-radius: 8px;
+    padding: 0.8rem; text-align: center; background: var(--mat);
+    font-size: var(--step--1); color: var(--muted);
+  }
+  .drop.over { border-color: var(--pen); background: var(--pen-soft); }
+  .choose {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
+    padding: 0 1rem; margin-bottom: 0.4rem; background: var(--ink); color: var(--paper);
+    border-radius: 8px; font-weight: 600; cursor: pointer;
+  }
+  .choose:hover { background: var(--pen); }
+  .file-input:focus-visible + .choose { outline: 2px solid var(--pen); outline-offset: 3px; }
+  .linkish {
+    border: 0; background: none; padding: 0.1rem 0; font: inherit;
+    color: var(--pen); text-decoration: underline; cursor: pointer;
+  }
+
+  .frame-row { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: 0.8rem; align-items: start; margin-top: 0.8rem; }
+  .frame {
+    display: block; width: 100%; height: auto; aspect-ratio: 1; border: 1px solid var(--mat-major);
+    border-radius: 6px; background: var(--paper); cursor: grab; touch-action: none;
+  }
+  .frame:active { cursor: grabbing; }
+  .frame-row.is-contain .frame { cursor: default; }
+  .frame-side { display: grid; gap: 0.1rem; min-width: 0; }
+  .small-btn {
+    min-height: 44px; border: 1px solid var(--mat-major); background: var(--paper);
+    border-radius: 6px; font: inherit; font-size: var(--step--1); color: var(--ink);
+    cursor: pointer; margin-top: 0.5rem; padding: 0 0.6rem;
+  }
+  .small-btn:hover:not(:disabled) { border-color: var(--pen); color: var(--pen); }
+  .small-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .presets { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.7rem; }
+  .preset {
+    width: 44px; height: 44px; display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+    border: 1px solid var(--mat-major); border-radius: 6px; background: var(--paper);
+    padding: 3px; cursor: pointer;
+  }
+  .preset[aria-pressed="true"] { border-color: var(--pen); box-shadow: 0 0 0 2px var(--pen-soft); }
+  .swatch { display: block; height: 100%; border-radius: 2px; }
+  .check {
+    display: flex; align-items: center; gap: 0.5rem; min-height: 36px;
+    margin-top: 0.7rem; font-size: var(--step--1); cursor: pointer;
+  }
+  .check input { width: 1.1rem; height: 1.1rem; accent-color: var(--pen); }
+
+  .prose { margin-top: 2.6rem; max-width: 66ch; }
+  .prose h2 { font-size: var(--step-1); margin-top: 1.6rem; }
+  .prose p { color: var(--muted); }
+  .prose .small { font-size: var(--step--1); }
+
+  @media (max-width: 56rem) {
+    .studio { grid-template-columns: 1fr; }
+    .frame-row { grid-template-columns: 8rem minmax(0, 1fr); }
+  }
+  @media (max-width: 24rem) {
+    .two { grid-template-columns: 1fr; }
+    .frame-row { grid-template-columns: 1fr; }
+    .frame { max-width: 12rem; }
+  }
+</style>
