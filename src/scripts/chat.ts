@@ -52,6 +52,9 @@ const clock = (ts: number) =>
 const openable = (mime: string) =>
   /^(image|video|audio)\//.test(mime) || mime === 'application/pdf' || mime.startsWith('text/');
 
+// Safari resets isComposing before the confirming Enter, but keyCode stays 229.
+const imeActive = (e: KeyboardEvent) => e.isComposing || e.keyCode === 229;
+
 const extOf = (name: string) => {
   const parts = name.split('.');
   const e = parts.length > 1 ? (parts.pop() ?? '').toUpperCase() : '';
@@ -186,10 +189,9 @@ export function initChat() {
   });
   // Enter inside the code field joins instead of firing the form's default (create).
   codeInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      start(false);
-    }
+    if (e.key !== 'Enter' || imeActive(e)) return;
+    e.preventDefault();
+    start(false);
   });
 
   copyLinkBtn.addEventListener('click', () => copyText(linkOut.textContent ?? '', copyLinkBtn, 'Copy link'));
@@ -210,10 +212,9 @@ export function initChat() {
   };
   sendBtn.addEventListener('click', send);
   compose.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      send();
-    }
+    if (e.key !== 'Enter' || e.shiftKey || imeActive(e)) return;
+    e.preventDefault();
+    send();
   });
 
   const renderStaged = () => {
