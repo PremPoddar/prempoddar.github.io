@@ -44,80 +44,92 @@ for (let my = 0; my < miniModules; my += 1) {
 }
 ---
 <Page title="Tools by Prem Poddar - web apps that run in the browser" description="Small web apps I built that you can use right here: no install, no account. A two-button calculator, a no-trace chat, and a halftone QR maker that prints a photo into a scannable code." full absolute>
-  <header class="intro">
-    <h1>Tools</h1>
-    <p class="lede">Things I built that you can use right here in the browser. No install, no account, nothing leaves your device.</p>
-  </header>
+  <div class="tools-top">
+    <header class="intro">
+      <h1>Tools</h1>
+      <p class="lede">Things I built that you can use right here in the browser. No install, no account, nothing leaves your device.</p>
+    </header>
+    <aside class="bench" aria-label="Coming next">
+      <h2>On the bench</h2>
+      <p>nothing yet, the desk is full for now</p>
+    </aside>
+  </div>
 
   <section class="tools" aria-label="The tools">
     <a class="tool" href="/tools/two-button-calculator/">
-      <span class="mini" aria-hidden="true">
-        <span class="lcd">
-          <span class="idle">0</span>
-          <span class="live">2.718281828</span>
+      <span class="art">
+        <span class="mini" aria-hidden="true">
+          <span class="lcd">
+            <span class="idle">0</span>
+            <span class="live">2.718281828</span>
+          </span>
+          <span class="keys">
+            <span class="k">1</span>
+            <span class="k eml">EML</span>
+          </span>
+          <span class="brand">SCIENTIFIC · 2-BUTTON</span>
         </span>
-        <span class="keys">
-          <span class="k">1</span>
-          <span class="k eml">EML</span>
-        </span>
-        <span class="brand">SCIENTIFIC · 2-BUTTON</span>
       </span>
       <span class="body">
         <span class="kicker">tool 01</span>
         <h2>Two-Button Scientific Calculator</h2>
         <p>The machine from the Numberphile video, working: two buttons that can do the whole keypad. Type any expression and watch it compile into the exact presses, then copy them back into the calculator.</p>
         <span class="ids" aria-hidden="true">e = EML(1, 1) · exp(x) = EML(x, 1) · x − y = EML(ln x, exp y)</span>
-        <span class="open">Open the calculator <span class="arrow">→</span></span>
+        <span class="open">Open the calculator <span class="arrow" aria-hidden="true">→</span></span>
       </span>
     </a>
 
     <a class="tool" href="/tools/chat/">
-      <span class="mini" aria-hidden="true">
-        <span class="bubbles">
-          <span class="b dark"></span>
-          <span class="b light"></span>
-          <span class="cursor"></span>
+      <span class="art">
+        <span class="mini" aria-hidden="true">
+          <span class="bubbles">
+            <span class="b dark"></span>
+            <span class="b light"></span>
+            <span class="cursor"></span>
+          </span>
+          <span class="brand">NO-TRACE · P2P · EPHEMERAL</span>
         </span>
-        <span class="brand">NO-TRACE · P2P · EPHEMERAL</span>
       </span>
       <span class="body">
         <span class="kicker">tool 02</span>
         <h2>No-Trace Chat</h2>
         <p>A temporary room for quick handoffs: messages, photos and files, encrypted, device to device. Close the tab and it's all gone.</p>
         <span class="ids" aria-hidden="true">room code = 3 words · owner approves · 8 people max</span>
-        <span class="open">Open the chat <span class="arrow">→</span></span>
+        <span class="open">Open the chat <span class="arrow" aria-hidden="true">→</span></span>
       </span>
     </a>
 
     <a class="tool" href="/tools/halftone-qr/">
-      <span class="mini halftone" aria-hidden="true">
-        <svg class="mini-qr" viewBox={`0 0 ${miniCells} ${miniCells}`} shape-rendering="crispEdges">
-          <rect width={miniCells} height={miniCells} fill="var(--paper)" />
-          <g fill="var(--ink)">
-            {miniDots.map((dot) => <rect x={dot.x} y={dot.y} width="1" height="1" />)}
-          </g>
-        </svg>
-        <span class="brand">PHOTO · DITHER · QR</span>
+      <span class="art">
+        <span class="mini halftone" aria-hidden="true">
+          <svg class="mini-qr" viewBox={`0 0 ${miniCells} ${miniCells}`} shape-rendering="crispEdges">
+            <rect width={miniCells} height={miniCells} fill="var(--paper)" />
+            <g fill="var(--ink)">
+              {miniDots.map((dot) => <rect x={dot.x} y={dot.y} width="1" height="1" />)}
+            </g>
+          </svg>
+          <span class="brand">PHOTO · DITHER · QR</span>
+        </span>
       </span>
       <span class="body">
         <span class="kicker">tool 03</span>
         <h2>Halftone QR Codes</h2>
         <p>Turn a photo into a working QR code, with the picture printed into the dots. Pick your ink and paper, tune the dither, and take a PNG or SVG.</p>
         <span class="ids" aria-hidden="true">3 cells per module · ink and paper · PNG or SVG</span>
-        <span class="open">Open the QR maker <span class="arrow">→</span></span>
+        <span class="open">Open the QR maker <span class="arrow" aria-hidden="true">→</span></span>
       </span>
     </a>
   </section>
-
-  <aside class="bench" aria-label="Coming next">
-    <h2>On the bench</h2>
-    <p>nothing yet, the desk is full for now</p>
-  </aside>
 </Page>
 
 <style>
+  .tools-top {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 2rem; margin-bottom: 2.2rem;
+  }
+  .intro { min-width: 0; }
   .intro h1 { font-size: var(--step-3); }
-  .lede { color: var(--muted); max-width: 56ch; margin: 0.6rem 0 2.4rem; }
+  .lede { color: var(--muted); max-width: 56ch; margin: 0.6rem 0 0; }
 
   .tools { display: grid; gap: 1.4rem; max-width: 40rem; }
   .tool {
@@ -130,6 +142,7 @@ for (let my = 0; my < miniModules; my += 1) {
   .tool:hover { transform: translateY(-3px); box-shadow: var(--lift-high); border-color: var(--pen); }
 
   /* the device, drawn in CSS */
+  .art { display: contents; }
   .mini {
     flex: none; width: 172px; background: var(--mat); border: 1px solid var(--mat-major);
     border-radius: 12px; padding: 0.8rem; box-shadow: 0 2px 0 var(--mat-major);
@@ -196,7 +209,7 @@ for (let my = 0; my < miniModules; my += 1) {
 
   /* the sticky note for what's next */
   .bench {
-    position: relative; margin: 2.6rem 0 0; width: fit-content; max-width: 20rem;
+    position: relative; flex: none; margin: 0.35rem 0 0; width: fit-content; max-width: 18rem;
     background: var(--note); color: var(--note-ink); font-family: var(--hand);
     padding: 1rem 1.1rem 1.2rem; box-shadow: 0 10px 18px -10px rgb(60 50 0 / 0.45);
     transform: rotate(-2deg);
@@ -208,6 +221,18 @@ for (let my = 0; my < miniModules; my += 1) {
   .bench h2 { font-family: var(--hand); font-size: 1.35rem; margin: 0 0 0.2rem; }
   .bench p { margin: 0; font-size: 1.15rem; line-height: 1.2; }
 
+  @media (min-width: 64rem) {
+    .tools { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; max-width: none; }
+    .tool { flex-direction: column; align-items: stretch; gap: 0.9rem; padding: 1.25rem 1.35rem 1.35rem; }
+    .art { display: flex; align-items: flex-end; justify-content: center; height: 235px; }
+    .mini { width: min(100%, 210px); }
+    .body { display: flex; flex: 1; flex-direction: column; }
+    .ids { margin-top: auto; }
+  }
+  @media (max-width: 56rem) {
+    .tools-top { display: block; }
+    .bench { margin-top: 1.5rem; }
+  }
   @media (max-width: 620px) {
     .tool { flex-direction: column; align-items: stretch; gap: 1.2rem; padding: 1.2rem; }
     .mini { margin: 0 auto; }
