@@ -1,5 +1,12 @@
 import { execFileSync } from 'node:child_process';
 
+// Pages under /tools/ are built from their page file plus these sources.
+const TOOL_SOURCES: Record<string, string[]> = {
+  chat: ['src/scripts/chat.ts', 'src/lib/chat'],
+  'halftone-qr': ['src/scripts/halftone-qr.ts', 'src/lib/halftone'],
+  'two-button-calculator': ['src/scripts/calculator.ts', 'src/lib/calculator'],
+};
+
 // Files (or folders) whose last git change counts as a change to each page.
 // URL paths always carry a trailing slash; '' below means the home page.
 function filesForPage(path: string): string[] {
@@ -24,7 +31,7 @@ function filesForPage(path: string): string[] {
       return ['src/pages/resources.astro', 'src/content/resources.yaml', 'src/lib/resources.ts'];
     case 'tools':
       return second
-        ? [`src/pages/tools/${second}.astro`]
+        ? [`src/pages/tools/${second}.astro`, ...(TOOL_SOURCES[second] ?? [])]
         : ['src/pages/tools/index.astro'];
     case 'resume':
       return ['src/pages/resume.astro', 'src/data/resume.ts'];
