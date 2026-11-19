@@ -137,6 +137,9 @@ const presets = [
           </select>
         </label>
 
+        <label class="check"><input type="checkbox" data-photo-colours /> Keep the photo's colours</label>
+        <p class="hint small">Uses the photo's own colours and ignores the dot pattern. Photo colours can make the code harder to scan.</p>
+
         <div class="presets" role="group" aria-label="Colour presets">
           {presets.map((preset) => (
             <button
@@ -198,6 +201,11 @@ const presets = [
       The image is sampled at cell size, adjusted for brightness and contrast, then reduced to two levels with
       your chosen dither. That result is composed with the QR grid. The preview and the download share the same grid,
       so the PNG or SVG is exactly what you see here.
+    </p>
+    <p>
+      Turn on Keep the photo's colours and the image keeps its RGB values at the same cell size instead of being
+      dithered. The module centres and the finder, timing and format patterns stay solid ink and paper. Photo
+      colours leave the scanner less margin, so test the download before printing.
     </p>
 
     <h2>Scan tips</h2>
@@ -315,6 +323,7 @@ const presets = [
   select { cursor: pointer; }
   input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--pen); cursor: pointer; padding: 0; }
   input[type="range"]:disabled { opacity: 0.45; cursor: not-allowed; }
+  select:disabled { opacity: 0.45; cursor: not-allowed; }
   input[type="color"] {
     width: 100%; min-height: 44px; border: 1px solid var(--mat-major); border-radius: 6px;
     background: var(--paper); padding: 3px; cursor: pointer;

@@ -1,6 +1,8 @@
 import { makeQr, QrTooLongError, type ErrorCorrection, type QrResult } from '../lib/halftone/qr';
 import {
   applyTone,
+  applyToneRgb,
+  buildColourSvg,
   buildSvg,
   cellSizeFor,
   composeGrid,
@@ -31,6 +33,8 @@ interface State {
   dither: DitherMode;
   ink: string;
   paper: string;
+  photoColours: boolean;
+  photo: HTMLCanvasElement | null;
   brightness: number;
   contrast: number;
   fit: Fit;
@@ -148,6 +152,7 @@ export function initHalftoneQr(): void {
   const ecEl = query<HTMLSelectElement>('[data-ec]');
   const versionEl = query<HTMLSelectElement>('[data-version]');
   const ditherEl = query<HTMLSelectElement>('[data-dither]');
+  const photoEl = query<HTMLInputElement>('[data-photo-colours]');
   const quietEl = query<HTMLInputElement>('[data-quiet]');
   const transparentEl = query<HTMLInputElement>('[data-transparent]');
   const inkEl = query<HTMLInputElement>('[data-ink]');
@@ -183,6 +188,8 @@ export function initHalftoneQr(): void {
     dither: 'floyd',
     ink: '#15201a',
     paper: '#fdfdfb',
+    photoColours: false,
+    photo: null,
     brightness: 0,
     contrast: 100,
     fit: 'cover',
@@ -275,6 +282,33 @@ export function initHalftoneQr(): void {
     canvas.width = total;
     canvas.height = total;
     const ctx = context(canvas);
+
+    if (state.photoColours && state.photo) {
+      if (!state.transparent) {
+        ctx.fillStyle = state.paper;
+        ctx.fillRect(0, 0, total, total);
+      }
+
+      ctx.drawImage(state.photo, offset, offset);
+
+      for (let y = 0; y < size; y += 1) {
+        for (let x = 0; x < size; x += 1) {
+          const moduleRow = Math.floor(y / CELLS_PER_MODULE);
+          const moduleCol = Math.floor(x / CELLS_PER_MODULE);
+          const cellRow = y % CELLS_PER_MODULE;
+          const cellCol = x % CELLS_PER_MODULE;
+          const module = moduleRow * qr.modules + moduleCol;
+          const isCentre = cellRow === 1 && cellCol === 1;
+          if (qr.reserved[module] !== 1 && !isCentre) continue;
+
+          ctx.fillStyle = qr.dark[module] === 1 ? state.ink : state.paper;
+          ctx.fillRect(x + offset, y + offset, 1, 1);
+        }
+      }
+
+      return canvas;
+    }
+
     const image = ctx.createImageData(total, total);
 
     for (let y = 0; y < total; y += 1) {
@@ -332,6 +366,19 @@ export function initHalftoneQr(): void {
     );
   }
 
+  function sampledColours(cellSize: number): HTMLCanvasElement {
+    const canvas = document.createElement('canvas');
+    canvas.width = cellSize;
+    canvas.height = cellSize;
+    const ctx = context(canvas);
+    drawSource(ctx, cellSize);
+
+    const image = ctx.getImageData(0, 0, cellSize, cellSize);
+    image.data.set(applyToneRgb(image.data, state.brightness, state.contrast));
+    ctx.putImageData(image, 0, 0);
+    return canvas;
+  }
+
   function updateContrastNote(): void {
     const ratio = contrastRatio(state.ink, state.paper);
     const inverted = relativeLuminance(state.ink) >= relativeLuminance(state.paper);
@@ -361,9 +408,15 @@ export function initHalftoneQr(): void {
     frame.setAttribute('aria-disabled', String(contain));
   }
 
+  function updateColourMode(): void {
+    state.photoColours = photoEl.checked;
+    ditherEl.disabled = state.photoColours;
+  }
+
   function invalidate(): void {
     state.qr = null;
     state.cells = null;
+    state.photo = null;
     state.totalCells = 0;
     state.cellSize = 0;
     previewCtx.clearRect(0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
@@ -433,11 +486,12 @@ export function initHalftoneQr(): void {
     setError(textError, '');
 
     const size = state.qr.modules * CELLS_PER_MODULE;
+    state.photo = state.photoColours ? sampledColours(size) : null;
     state.cells = composeGrid(
       state.qr.dark,
       state.qr.reserved,
       state.qr.modules,
-      sampledImage(size),
+      state.photo ? new Uint8Array(size * size) : sampledImage(size),
     );
     state.totalCells = totalCellsFor(state.qr.modules, state.quiet);
     state.cellSize = cellSizeFor(Number(sizeEl.value), state.totalCells);
@@ -534,6 +588,10 @@ export function initHalftoneQr(): void {
   ecEl.addEventListener('change', scheduleRender);
   versionEl.addEventListener('change', scheduleRender);
   ditherEl.addEventListener('change', scheduleRender);
+  photoEl.addEventListener('change', () => {
+    updateColourMode();
+    scheduleRender();
+  });
   quietEl.addEventListener('change', scheduleRender);
   transparentEl.addEventListener('change', scheduleRender);
   sizeEl.addEventListener('change', scheduleRender);
@@ -709,14 +767,27 @@ export function initHalftoneQr(): void {
     const qr = state.qr;
     const cells = state.cells;
     if (!qr || !cells) return;
-    const svg = buildSvg({
-      grid: cells,
-      modules: qr.modules,
-      ink: state.ink,
-      paper: state.paper,
-      transparent: state.transparent,
-      quietZone: state.quiet,
-    });
+
+    const svg = state.photoColours && state.photo
+      ? buildColourSvg({
+          photoHref: state.photo.toDataURL('image/png'),
+          modules: qr.modules,
+          dark: qr.dark,
+          reserved: qr.reserved,
+          ink: state.ink,
+          paper: state.paper,
+          transparent: state.transparent,
+          quietZone: state.quiet,
+        })
+      : buildSvg({
+          grid: cells,
+          modules: qr.modules,
+          ink: state.ink,
+          paper: state.paper,
+          transparent: state.transparent,
+          quietZone: state.quiet,
+        });
+
     download(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }), `${baseName()}.svg`);
     setStatus('Downloaded the SVG.', 'ok');
   });
@@ -780,6 +851,7 @@ export function initHalftoneQr(): void {
   });
 
   updateFitState();
+  updateColourMode();
   state.source = makeSample();
   state.sourceWidth = 1200;
   state.sourceHeight = 900;

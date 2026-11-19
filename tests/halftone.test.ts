@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { alignmentCenters, makeQr, QrTooLongError, reservedMask } from '../src/lib/halftone/qr';
 import {
+  buildColourSvg,
   buildSvg,
   cellSizeFor,
   composeGrid,
@@ -9,6 +10,7 @@ import {
   hexToRgb,
   totalCellsFor,
   applyTone,
+  applyToneRgb,
   CELLS_PER_MODULE,
   QUIET_CELLS,
 } from '../src/lib/halftone/render';
@@ -116,6 +118,30 @@ describe('tone adjustment', () => {
 
   it('returns a new buffer', () => {
     expect(applyTone(input, 0, 100)).not.toBe(input);
+  });
+});
+
+describe('colour tone adjustment', () => {
+  const input = new Uint8ClampedArray([0, 64, 128, 255, 255, 128, 64, 255]);
+
+  it('leaves the channels alone at the defaults', () => {
+    expect(Array.from(applyToneRgb(input, 0, 100))).toEqual([...input]);
+  });
+
+  it('shifts every channel by the brightness', () => {
+    expect(Array.from(applyToneRgb(input, 20, 100))).toEqual([20, 84, 148, 255, 255, 148, 84, 255]);
+  });
+
+  it('clamps every channel and keeps alpha', () => {
+    expect(Array.from(applyToneRgb(input, -80, 100))).toEqual([0, 0, 48, 255, 175, 48, 0, 255]);
+  });
+
+  it('applies contrast around the midpoint', () => {
+    expect(Array.from(applyToneRgb(input, 0, 200))).toEqual([0, 0, 128, 255, 255, 128, 0, 255]);
+  });
+
+  it('returns a new buffer', () => {
+    expect(applyToneRgb(input, 0, 100)).not.toBe(input);
   });
 });
 
@@ -279,5 +305,56 @@ describe('SVG export', () => {
 
   it('rejects a grid that does not match the module count', () => {
     expect(() => buildSvg({ ...base, grid: new Uint8Array(8) })).toThrow();
+  });
+});
+
+describe('colour SVG export', () => {
+  const photo = 'data:image/png;base64,abc';
+  const base = {
+    photoHref: photo,
+    modules: 1,
+    ink: '#112233',
+    paper: '#ffffff',
+    transparent: false,
+    quietZone: false,
+  };
+
+  it('puts the photo under a dark centre cell', () => {
+    const svg = buildColourSvg({ ...base, dark: new Uint8Array([1]), reserved: new Uint8Array([0]) });
+    expect(svg).toContain(`<image href="${photo}" x="0" y="0" width="3" height="3"`);
+    expect(svg).toContain('<rect width="3" height="3" fill="#ffffff"/>');
+    expect(svg).toContain('<path fill="#112233" d="M1 1h1v1h-1z"/>');
+    expect(svg).not.toContain('<path fill="#ffffff"');
+    expect(svg.indexOf('<image')).toBeLessThan(svg.indexOf('<path'));
+  });
+
+  it('paints a light centre cell over the photo', () => {
+    const svg = buildColourSvg({ ...base, dark: new Uint8Array([0]), reserved: new Uint8Array([0]) });
+    expect(svg).toContain('<path fill="#ffffff" d="M1 1h1v1h-1z"/>');
+    expect(svg).not.toContain('<path fill="#112233"');
+  });
+
+  it('covers a reserved module completely', () => {
+    const svg = buildColourSvg({ ...base, dark: new Uint8Array([1]), reserved: new Uint8Array([1]) });
+    expect(svg).toContain('<path fill="#112233" d="M0 0h3v1h-3zM0 1h3v1h-3zM0 2h3v1h-3z"/>');
+    expect(svg).not.toContain('<path fill="#ffffff"');
+  });
+
+  it('offsets the photo and cells by the quiet zone', () => {
+    const svg = buildColourSvg({ ...base, quietZone: true, dark: new Uint8Array([1]), reserved: new Uint8Array([0]) });
+    expect(svg).toContain('viewBox="0 0 27 27"');
+    expect(svg).toContain(`<image href="${photo}" x="12" y="12" width="3" height="3"`);
+    expect(svg).toContain('d="M13 13h1v1h-1z"');
+  });
+
+  it('keeps the light cells solid when paper is transparent', () => {
+    const svg = buildColourSvg({ ...base, transparent: true, dark: new Uint8Array([0]), reserved: new Uint8Array([0]) });
+    expect(svg).not.toContain('<rect');
+    expect(svg).toContain('<path fill="#ffffff" d="M1 1h1v1h-1z"/>');
+    expect(svg).toContain('<image');
+  });
+
+  it('rejects mismatched module buffers', () => {
+    expect(() => buildColourSvg({ ...base, dark: new Uint8Array([1]), reserved: new Uint8Array(0) })).toThrow();
   });
 });

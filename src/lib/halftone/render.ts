@@ -29,6 +29,24 @@ export function applyTone(input: Float32Array, brightness: number, contrast: num
   return output;
 }
 
+export function applyToneRgb(
+  input: Uint8ClampedArray,
+  brightness: number,
+  contrast: number,
+): Uint8ClampedArray {
+  const output = new Uint8ClampedArray(input.length);
+  const factor = contrast / 100;
+
+  for (let i = 0; i < input.length; i += 4) {
+    output[i] = (input[i] - 128) * factor + 128 + brightness;
+    output[i + 1] = (input[i + 1] - 128) * factor + 128 + brightness;
+    output[i + 2] = (input[i + 2] - 128) * factor + 128 + brightness;
+    output[i + 3] = input[i + 3];
+  }
+
+  return output;
+}
+
 function bayerMatrix(size: 4 | 8): number[][] {
   let matrix = [[0, 2], [3, 1]];
 
@@ -205,6 +223,15 @@ export function buildSvg(options: SvgOptions): string {
 
   const total = totalCellsFor(modules, quietZone);
   const offset = quietZone ? QUIET_CELLS : 0;
+  const path = pathRuns(grid, size, offset);
+
+  const background = transparent ? '' : `<rect width="${total}" height="${total}" fill="${paper}"/>`;
+  const inkPath = path ? `<path fill="${ink}" d="${path}"/>` : '';
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${total} ${total}" shape-rendering="crispEdges">${background}${inkPath}</svg>`;
+}
+
+function pathRuns(grid: Uint8Array, size: number, offset: number): string {
   const runs: string[] = [];
 
   for (let y = 0; y < size; y += 1) {
@@ -221,8 +248,55 @@ export function buildSvg(options: SvgOptions): string {
     }
   }
 
-  const background = transparent ? '' : `<rect width="${total}" height="${total}" fill="${paper}"/>`;
-  const path = runs.length > 0 ? `<path fill="${ink}" d="${runs.join('')}"/>` : '';
+  return runs.join('');
+}
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${total} ${total}" shape-rendering="crispEdges">${background}${path}</svg>`;
+export interface ColourSvgOptions {
+  photoHref: string;
+  modules: number;
+  dark: Uint8Array;
+  reserved: Uint8Array;
+  ink: string;
+  paper: string;
+  transparent: boolean;
+  quietZone: boolean;
+}
+
+export function buildColourSvg(options: ColourSvgOptions): string {
+  const { photoHref, modules, dark, reserved, ink, paper, transparent, quietZone } = options;
+  const size = modules * CELLS_PER_MODULE;
+
+  if (dark.length !== modules * modules || reserved.length !== modules * modules) {
+    throw new Error('QR buffers do not match the module count.');
+  }
+
+  const total = totalCellsFor(modules, quietZone);
+  const offset = quietZone ? QUIET_CELLS : 0;
+  const inkCells = new Uint8Array(size * size);
+  const paperCells = new Uint8Array(size * size);
+
+  for (let moduleRow = 0; moduleRow < modules; moduleRow += 1) {
+    for (let moduleCol = 0; moduleCol < modules; moduleCol += 1) {
+      const module = moduleRow * modules + moduleCol;
+      for (let cellRow = 0; cellRow < CELLS_PER_MODULE; cellRow += 1) {
+        for (let cellCol = 0; cellCol < CELLS_PER_MODULE; cellCol += 1) {
+          const isCentre = cellRow === 1 && cellCol === 1;
+          if (reserved[module] !== 1 && !isCentre) continue;
+
+          const row = moduleRow * CELLS_PER_MODULE + cellRow;
+          const col = moduleCol * CELLS_PER_MODULE + cellCol;
+          const index = row * size + col;
+          if (dark[module] === 1) inkCells[index] = 1;
+          else paperCells[index] = 1;
+        }
+      }
+    }
+  }
+
+  const background = transparent ? '' : `<rect width="${total}" height="${total}" fill="${paper}"/>`;
+  const photo = `<image href="${photoHref}" x="${offset}" y="${offset}" width="${size}" height="${size}" preserveAspectRatio="none" style="image-rendering:pixelated"/>`;
+  const inkPath = pathRuns(inkCells, size, offset);
+  const paperPath = pathRuns(paperCells, size, offset);
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${total} ${total}" shape-rendering="crispEdges">${background}${photo}${paperPath ? `<path fill="${paper}" d="${paperPath}"/>` : ''}${inkPath ? `<path fill="${ink}" d="${inkPath}"/>` : ''}</svg>`;
 }
