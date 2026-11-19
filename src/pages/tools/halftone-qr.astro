@@ -164,6 +164,7 @@ const presets = [
             <input type="color" data-paper value="#fdfdfb" />
           </label>
         </div>
+        <p class="hint small">The Ink and Paper boxes open a full colour picker, not just these presets.</p>
         <p class="warn" data-contrast-note role="status"></p>
 
         <label class="check"><input type="checkbox" data-quiet checked /> Quiet zone around the code</label>
@@ -318,7 +319,8 @@ const presets = [
     width: 100%; min-height: 44px; border: 1px solid var(--mat-major); border-radius: 6px;
     background: var(--paper); padding: 3px; cursor: pointer;
   }
-  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 0.7rem; }
+  .two .field { margin-top: 0; }
 
   .hint { color: var(--muted); font-size: 0.8rem; line-height: 1.45; margin: 0.5rem 0 0; }
   .hint.small { font-size: 0.76rem; margin-top: 0.8rem; }
