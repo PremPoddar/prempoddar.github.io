@@ -34,7 +34,7 @@ const mailto = `mailto:${site.email}?subject=${encodeURIComponent('A project for
           </ul>
           <p class="actions">
             <a class="primary" href={`/work/${w.id}/`}>Read the case study</a>
-            {w.data.link && <a href={w.data.link}>Visit {new URL(w.data.link).host}</a>}
+            {w.data.link && <a href={w.data.link} target="_blank" rel="noopener noreferrer">Visit {new URL(w.data.link).host}</a>}
           </p>
         </div>
       </li>
