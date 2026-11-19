@@ -2,6 +2,7 @@
 import Page from '../../layouts/Page.astro';
 import JsonLd from '../../components/JsonLd.astro';
 import { webApplicationSchema } from '../../lib/seo';
+import { MAX_TEXT_CHARS } from '../../lib/chat/message';
 
 const canonical = 'https://prempoddar.is-a.dev/tools/chat/';
 const claims =
@@ -79,7 +80,7 @@ const claims =
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           </label>
           <input class="visually-hidden" type="file" id="chat-file" data-file />
-          <textarea data-compose rows="1" aria-label="Message" placeholder="Write a message" title="Enter sends, Shift + Enter adds a line, Ctrl/Cmd + V or dropping files attaches them"></textarea>
+          <textarea data-compose rows="1" maxlength={MAX_TEXT_CHARS} aria-label="Message" placeholder="Write a message" title="Enter sends, Shift + Enter adds a line, Ctrl/Cmd + V or dropping files attaches them"></textarea>
           <button type="button" class="go" data-send aria-label="Send" title="Send (Enter)">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></svg>
           </button>

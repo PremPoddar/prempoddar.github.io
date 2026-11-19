@@ -2,7 +2,7 @@
 // Holds the live message list; all membership truth flows through reduceRoom.
 
 import {joinRoom} from '@trystero-p2p/torrent';
-import {MAX_FILE_BYTES, fileTooBig, parseSegments, type Segment} from './message';
+import {MAX_FILE_BYTES, cleanFileMeta, cleanParts, fileTooBig, parseSegments, type FileMeta, type Segment} from './message';
 import {type Role, type RoomState, type Roster, reduceRoom, roleOf} from './room-model';
 import {applyRead, emptySocial} from './social';
 
@@ -35,7 +35,6 @@ const norm = (pct: number) => (pct > 1 ? pct / 100 : pct);
 
 type CtlWire = {kind: 'roster'; roster: Roster} | {kind: 'decline'};
 type ChatWire = {id: string; ts: number; parts: Segment[]};
-type FileMeta = {msgId: string; name: string; mime: string; size: number};
 type SocialWire = {kind: 'read'; ids: string[]};
 
 export function startRoom(opts: {code: string; name: string; create: boolean}): ChatHandle {
@@ -150,17 +149,19 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
 
   chat.onMessage((payload, ctx) => {
     if (!memberIds().has(ctx.userId)) return;
+    const parts = cleanParts(payload?.parts);
+    if (!parts || typeof payload.id !== 'string' || !Number.isFinite(payload.ts)) return;
     msgs = [
       ...msgs,
-      {id: payload.id, from: ctx.userId, fromName: nameOf(ctx.userId), ts: payload.ts, mine: ctx.userId === selfId, parts: payload.parts, seenBy: []},
+      {id: payload.id, from: ctx.userId, fromName: nameOf(ctx.userId), ts: payload.ts, mine: ctx.userId === selfId, parts, seenBy: []},
     ];
     flush();
   });
 
   fileAct.onReceive((ctx) => memberIds().has(ctx.userId) && ctx.byteLength <= MAX_FILE_BYTES);
   fileAct.onReceiveProgress((pct, {userId, metadata}) => {
-    const meta = metadata as unknown as FileMeta;
-    if (!memberIds().has(userId) || typeof meta.msgId !== 'string') return;
+    const meta = cleanFileMeta(metadata);
+    if (!meta || !memberIds().has(userId)) return;
     const m = msgs.find((x) => x.id === meta.msgId);
     if (m?.file) m.file.pct = norm(pct);
     else
@@ -179,9 +180,9 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
     flush();
   });
   fileAct.onMessage((data, {userId, metadata}) => {
-    if (!memberIds().has(userId)) return;
+    const meta = cleanFileMeta(metadata);
+    if (!meta || !memberIds().has(userId)) return;
     const bytes = data as Uint8Array;
-    const meta = metadata as unknown as FileMeta;
     const blob = new Blob([new Uint8Array(bytes)], {type: meta.mime});
     const m = msgs.find((x) => x.id === meta.msgId);
     const done: ChatMessage = m
@@ -200,7 +201,7 @@ export function startRoom(opts: {code: string; name: string; create: boolean}): 
   });
 
   socialAct.onMessage((payload, ctx) => {
-    if (!memberIds().has(ctx.userId)) return;
+    if (!memberIds().has(ctx.userId) || !Array.isArray(payload?.ids) || payload.ids.length > 1000) return;
     const by = nameOf(ctx.userId);
     if (payload.kind === 'read') social = applyRead(social, by, payload.ids);
     flush();

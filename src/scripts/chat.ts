@@ -98,7 +98,6 @@ export function initChat() {
   let unsub: (() => void) | null = null;
   let code = '';
   let myName = localStorage.getItem('chat-name') ?? randomName();
-  let lastSnap: Snapshot | null = null;
   let stick = true;
   const fileUrls = new Map<string, string>(); // msgId -> object URL, revoked on leave
   let staged: {file: File; url?: string}[] = [];
@@ -315,7 +314,6 @@ export function initChat() {
   };
 
   function render(snap: Snapshot) {
-    lastSnap = snap;
     const room = snap.room;
 
     // Ticks need the roster context: how many others exist, how many online.

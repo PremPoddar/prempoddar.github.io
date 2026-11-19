@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {ADJECTIVES, ANIMALS, NOUNS, randomName, roomCode} from '../src/lib/chat/words';
-import {MAX_FILE_BYTES, fileTooBig, linkTokens, parseSegments} from '../src/lib/chat/message';
+import {MAX_FILE_BYTES, MAX_TEXT_CHARS, cleanFileMeta, cleanParts, fileTooBig, linkTokens, parseSegments} from '../src/lib/chat/message';
 import {
   type RoomState,
   type Roster,
@@ -69,6 +69,27 @@ describe('message shaping', () => {
     expect(fileTooBig(26214400)).toBe(false);
     expect(fileTooBig(26214401)).toBe(true);
     expect(MAX_FILE_BYTES).toBe(25 * 1024 * 1024);
+  });
+  it('keeps well-shaped peer parts and drops the rest', () => {
+    expect(cleanParts([{kind: 'text', text: 'hi'}])).toEqual([{kind: 'text', text: 'hi'}]);
+    expect(cleanParts([])).toEqual([]);
+    expect(cleanParts('hello')).toBeNull();
+    expect(cleanParts([{kind: 'script', text: 'hi'}])).toBeNull();
+    expect(cleanParts([{kind: 'text', text: 3}])).toBeNull();
+    expect(cleanParts([{kind: 'text', text: 'x'.repeat(MAX_TEXT_CHARS + 1)}])).toBeNull();
+  });
+  it('keeps well-shaped file metadata and drops the rest', () => {
+    expect(cleanFileMeta({msgId: 'a', name: 'x.png', mime: 'image/png', size: 10})).toEqual({
+      msgId: 'a',
+      name: 'x.png',
+      mime: 'image/png',
+      size: 10,
+    });
+    expect(cleanFileMeta({msgId: 'a', name: 'x'.repeat(500), mime: 'text/plain', size: 1})?.name).toHaveLength(200);
+    expect(cleanFileMeta(null)).toBeNull();
+    expect(cleanFileMeta({name: 'x', mime: 'text/plain', size: 1})).toBeNull();
+    expect(cleanFileMeta({msgId: 'a', name: 'x', mime: null, size: 1})).toBeNull();
+    expect(cleanFileMeta({msgId: 'a', name: 'x', mime: 'text/plain', size: -1})).toBeNull();
   });
 });
 
