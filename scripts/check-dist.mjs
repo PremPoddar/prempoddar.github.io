@@ -30,6 +30,10 @@ export function checkDist(distDir) {
     problems.push('CNAME is missing or does not contain prempoddar.is-a.dev');
   }
 
+  if (existsSync(join(distDir, 'toolbox', 'index.html'))) {
+    problems.push('toolbox/index.html: the retired toolbox page must not be published');
+  }
+
   for (const name of readdirSync(distDir)) {
     if (RESERVED.includes(name.toLowerCase())) {
       problems.push(`${name}/ would clash with the existing app page at /${name}/`);

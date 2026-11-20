@@ -69,6 +69,16 @@ describe('checkDist', () => {
     expect(checkDist(dir).length).toBeGreaterThan(0);
   });
 
+  it('flags the retired toolbox page', () => {
+    put('toolbox/index.html', page('<p>The toolbox moved</p>'));
+    expect(checkDist(dir).length).toBeGreaterThan(0);
+  });
+
+  it('still allows toolbox icon assets', () => {
+    put('toolbox/brewlight.png', 'image bytes');
+    expect(checkDist(dir)).toEqual([]);
+  });
+
   it('requires a correct CNAME', () => {
     put('CNAME', 'example.com\n');
     expect(checkDist(dir).length).toBeGreaterThan(0);
